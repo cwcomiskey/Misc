@@ -1,0 +1,443 @@
+\documentclass{article}
+
+\title{FastScore SDK for R}
+\author{Chris Comiskey}
+\date{5 October 2017}
+
+\usepackage{natbib}
+\bibliographystyle{unsrtnat}
+
+\usepackage{fullpage}
+\usepackage{ulem}
+
+\usepackage{amsmath, amsthm, amssymb, amsfonts}
+\usepackage{mathtools}
+\usepackage{float}
+\usepackage{bbm}
+
+\usepackage{listings}
+
+
+\begin{document}
+
+\maketitle{}
+
+\section*{5 February 2018}
+\begin{itemize}
+\item \verb|model_manage.py|
+\item \verb|engine.py|
+\item Here's what you need to be able to do in Model Manage: \\
+
+There are four types of assets (models, streams, schemas, and sensors). \\
+
+For each type:
+      \begin{enumerate}
+      \item List the names of all assets of that type currently in model manage.
+      \item Retrieve an object of that type from Model Manage by name.
+      \item Create an object of that type and add it to Model Manage.
+      \item Delete an object of that type by name from Model Manage.
+      \end{enumerate}
+\item the object types for each asset are defined elsewhere; e.g. here's where the schema object is defined: schema.py      
+\end{itemize}
+
+
+\section*{1 February 2018}
+\begin{itemize}
+\item ``Nail the Model Manage functionality (add a model in a given language, add/remove/download attachments from models, add stream descriptors/schemata/sensor descriptors)''
+\item ``Then, work on the engine: attach streams, load models, etc''
+\end{itemize}
+
+\section*{22 January 2018 -- 26 Jan 2018}
+\begin{itemize}
+\item How do I document {\bf fastscore} methods that live in {\bf swagger}?? 
+\item Matthew: ``People are not exactly clamoring for the R-SDK, so right now I'm happy with the pace of development.''
+\item I think an instance of an R6 class (i.e. \verb|ConnectApi()|) can store an instance of another R6 class (i.e. \verb|ApiClient()|) as a field!!
+\item In \verb|swagger|, \verb|ConnectApi| defines \verb|$apiClient| as \verb|ApiClient$new()|!! (if argument not provided)
+\item This circumvents inheritance, providing access to all of the \verb|ApiClient| class instance's methods!!
+\end{itemize}
+
+\section*{19 January 2018}
+\begin{itemize}
+\item "\verb|..|" in Python is Intra-package referencing.
+\item This:
+\begin{verbatim}
+from ..v1 import configuration
+\end{verbatim}
+means: from package \verb|v1| in the same parent package import \verb|configuration|, which must either be a module in the parent package or a class/function/name within \verb|parent/__init__.py|
+\item Repeat: ``...or a {\bf class/function/name} within \verb|parent/__init__.py|'' Holy shit!
+\item So, in \verb|fastscore/suite/connect.py|:
+\begin{verbatim}
+from ..v1 import configuration
+\end{verbatim}
+Refers to two lines in \verb|fastscore/v1/__init__.py|:
+\begin{verbatim}
+from .configuration import Configuration
+configuration = Configuration()
+\end{verbatim}
+Hallelujah.
+\end{itemize}
+
+\section*{8 January 2018 - Call w/ Matthew}
+\begin{itemize}
+\item Be a lazy coder. Get something working (connect), then a little more working, then a little more...
+\item Focus on getting the core functionality to work first.
+\item If core functionality {\bf works} then I can test each additional bit as I add it... with fewer cascading changes to make, fewer dominoes to pick back up, when things go wrong and need fixing.
+\item Basically focus on \verb|ApiClient(...)|, \verb|ConnectApi(...)|, \verb|ModelManage(...)|, \verb|EngineApi(...)|, etc.
+\item Plus, there will be redundancies and unnecessary-ities that I can proactively avoid if I work core out, rather than bottom up.
+\item The missing \verb|v2| methods in the R-SDK responsible for the \verb|attempt to apply non function| error are unnecessary b/c redundant, and peripheral to core functionality.
+\item e.g. \verb|active_sensors(...)| just wraps around \verb|active_sensor_list(...)|, so both are not necessary; and the former is in \verb|v2| anyway (so not possible).
+\item However, all that I've done is great(!), imho, b/c it gave me the substance to demo(!!); and the practice to learn.
+\item Lowercase methods
+\item The decorator stuff (also being able to treat function as an object for another class's environment) may not be doable (or necessary) in R. This is fine. Focus on achieving the functionality, not replicating the Python SDK structure and code exactly.
+\item Auro: I explained some of the decisions/challenges inherent in expected vs. observed cashflow plots. He understood, said DS team should have a meeting after I'm back from vacation to discuss next calculations what/how; maybe even another such meeting with Sumit. And we won't hold our breath waiting for Sumit's cashflow-calculations-with-CoreLogic-data example.
+\end{itemize}
+
+
+\section*{3 January 2018}
+\begin{itemize}
+\item Class names should be CamelCase with the first letter capitalized, e.g., "\verb|ModelManage|"
+\item Function names and variable names should be lowercase and separated by underscores, e.g., "\verb|from_string|"
+\end{itemize}
+
+\section*{18 December 2017}
+
+\begin{itemize}
+\item {\bf Everything is just an HTTP request (\verb|httr::method|) using the FS API R-client to a FS API endpoint (through the proxy)}
+\item Make sure you hit all the endpoint-methods in the Python SDK, and you're done. To do so you will need structures, classes, methods, functions, settings...
+\end{itemize}
+
+\subsection*{fastscore-api-specs/suite-proxy-v1.yaml}
+\begin{itemize}
+\item basePath: \verb|/api/1/service| $\rightarrow$ \verb|https://localhost:15080/api/1/service|
+\item Tags: Connect, ModelManage, Engine
+\item Python codegen: the \verb|\swagger_client\api\| path contains five files: the three main services (tags): (1) \verb|connect_api.py|, (2) \verb|engine_api.py|, (3) \verb|model_manage_api.py|, and (4) \verb|__init__.py|, (5) \verb|login_api.py|.
+\item Endpoints are key. 
+    \begin{itemize}
+    \item  38 count: \verb|/{instance}/1/|
+    \item One \verb|/1/login|.
+    \item \verb|/{instance}/1/...| has multiple branches.
+    \item Each endpoint has HTTP method(s) 
+    \item 37 endpoints start \verb|/{instance}/1/...|  
+    \item 57 \verb|operationId|s
+    \item Same \verb|operationId|s in multiple classes
+    \end{itemize}
+\item operationId == function/method name
+    \begin{itemize}
+    \item 57
+    \item Classes (e.g. \verb|Connect()| and \verb|ApiClient|) are organizing structure; no operationId
+    \item \verb|operationId| often associated with an HTTP method, \_get, \_post, \_put, \_delete; and some others: \_list, \_head, \_set, \_attach, \_input/\_output, \_load/\_unload
+    \end{itemize}
+\item E.g.
+\begin{verbatim}
+  /{instance}/1/health:
+    get:
+      parameters:
+        - $ref: "#/parameters/instance"
+      tags:
+        - Connect
+        - ModelManage
+        - Engine
+      operationId: health_get
+\end{verbatim}
+This one \verb|operationId| crossed with three tags/services means something along the lines of:
+\begin{enumerate}
+\item \verb|Connect$healt_get()|
+\item \verb|ModelManage$healt_get()|
+\item \verb|Engine$healt_get()|
+\end{enumerate}
+...three endpoint-function/method combos, for the single HTTP method \verb|GET|.
+\end{itemize}
+
+\section*{4 December 2017}
+\begin{itemize}
+\item All python SDK files in the GitHub repo are hand written. \verb|makefile| downloads it each time
+\item References to \verb|swg| are references to the codegen stuff
+\item Sensors (must) go at tapping points
+\item python SDK comments are in hand-written portion, and thus written by hand. : )
+\item \verb|$ref| points back to parameters at the beginning of ``-v1.yaml'' file. Those parameters are included at the beginning for convenience, because used so often throughout.
+\item Matthew's recommended plan of attack: 
+  \begin{enumerate}
+  \item Set all the stuff aside from Matthew/Github, and start from scratch. 
+  \item Use python SDK as reference, and refer to Matthew's when necessary. 
+  \item Start with connect class, then model manage class, then engine class.
+  \end{enumerate}
+\end{itemize}
+
+\section*{``R client for the FastScore API''}
+
+\section*{30 November 2017}
+\begin{itemize}
+\item {\bf Everything is just an HTTP request (\verb|httr::method|) using the FS API R-client to a FS API endpoint (through the proxy)}
+\item Now that I see what codegen's {\bf swagger} is up to, let's look at Matthew's {\bf fastscore} to see how it is going about its business.
+\item Just match up the endpoint-method combinations from codegen's {\bf swagger} to Matthew's {\bf fastscore} and you're on your way. Then make sure you hit all the endpoint-methods in the Python SDK, and you're done.
+\item Plan of Attack: understand codegen's {\bf swagger}, then pick apart Matthew and make sure everything is covered.
+\item Question: can I construct package with functions specific to classes? ...instead of methods ---which are inherently specifc to their class, but less visible and harder to document.
+\end{itemize}
+
+\section*{Notes}
+\begin{itemize}
+\item Matthew says to use (rely on) his now
+\item Yev said following Python SDK is good idea
+\item Need to comb through what swagger SDK can do, fastscore (Matthew) SDK can do --- take best of both to build. Automatically generated stuff as much as possible, Matthew's stuff should mostly cover the rest.
+\item I'll probably eventually need to fill out the package---as a package.
+\end{itemize}
+
+\section*{27 November 2017 (Monday meeting)}
+\begin{itemize}
+\item Matthew worked on the R-SDK in two stages, one prior to Swagger-codegen. Therefore, the originals are outdated, but still in the folder/package.
+\item Use the generated version as much as possible.
+\item To help tell the difference, look at the Python SDK, where the file names should match up pretty well (one-to-one).
+\item Also, the files with functions instead of class contained methods are probably outdated.
+\item Matthew pretty much used the Python SDK as a template to build the R-SDK, went file by file, line by ine.
+\item The Python SDK is complete.
+\item Wrappers around the codegen package as much as possible.
+\item Create new {\bf branch} of FS SDK on GitHub, commit changes there
+\item Use Git. Give it a shot, pretty easy, ask for help if needbe.
+\item Keep track of a FS wishlist as I work on Auro stuff, for what I wish/want to be able to do in FS but can't, or don't know how.
+\end{itemize}
+
+\section*{20 November 2017}
+\begin{itemize}
+\item Should I make a \verb|Character| class, which is obviously missing?
+\item Email Charlotte or ask on some R Q\&A forum: advantages/disadvantges of creating class with methods versus free-standing functions
+\end{itemize}
+
+\section*{16 November 2017}
+\begin{itemize}
+\item The ``Character'' class causing trouble in \verb|ModelManageApi$stream_list()| must be defined/created in the package somewhere.
+\item I could tell the GitHub guy authoring the R codegen package about the bugs as I come across them. Be sure to use toy examples, nothing ODG.
+\item There is a way to chage the global setting on dealing with "self certify" option
+\item Steve will try to calculate CPR, CDR, and delinquient transition rates.
+\item Question (of mine) for Rehgan: how do I use data (e.g. Matthew's minicourse) on my machine in the OVA container 
+\item Replicating Matthew's JNB ModelDeploy in R will be one of my jobs in the not too distant future. Think about using Rpy (or whatever that package is) to write a wrapper around the work already done in Python.
+\end{itemize}
+
+\section*{15 November 2017}
+\subsection*{Chat with Maxim}
+\begin{itemize}
+\item ``In computer networks, a {\bf proxy server} is a server that acts as an intermediary for requests from clients seeking resources from other servers'' (Wikipedia)
+\item Many API endpoints have the same 'parameters' (e.g. model name) in the URL. 
+\item For convenience, they (parameters) can be put into the parameters section. 
+\item Instance is needed because we use 'proxy': \\
+...You access: \\
+https://localhost:8000/api/1/service/engine-1/1/health \\
+...and the proxy dials: \\
+https://engine-1:8003/1/health \\
+...instead. 
+\item {\bf 'engine-1'} is the {\bf instance} - the direction for proxy to the real address.
+\item {\bf Instance} names are known to {\bf Connect} (the service), when it gets its configuration. 
+\item {\bf Connect} the {\bf service}.
+\item {\bf Connect} assigns sequential names to {\bf instances} of given kind. 
+\item e.g. if there are three {\bf engines} in the {\bf config}, they get names engine-1, engine-2, engine-3.
+\item The {\bf proxy} asks {\bf Connect} (the service) for the {\bf instance} info including names, hosts, and ports.
+\item Coincidently, {\bf Connect} the {\bf service} has /1/connect endpoint that returns the {\bf instance} (fleet) info
+\item https://opendatagoup.atlassian.net/wiki/spaces/PHT/pages/18841635/Connect+Model+Manage+and+CLI
+\item https://opendatagoup.atlassian.net/wiki/spaces/PHT/pages/48380719/CLI+commands+revisited (and links at bottom)
+\end{itemize}
+End chat with Maxim. \\
+
+\subsection*{More SDK Information and Resources}
+https://opendatagoup.atlassian.net/wiki/spaces/PHT/pages/48760284/FastScore+SDK+Information
+\begin{itemize}
+\item ``The {\bf FastScore SDK} is a collection of libraries (packages) that can be used to build applications that interact with the {\bf FastScore suite}. It includes wrappers around the REST API commands, higher level abstractions (e.g., model and stream objects), and utility features (such as dataframe/JSON de/encoding). An example of such an application is the FastScore CLI.''
+\item These {\bf classes} are the core of the high level SDK:
+        \begin{itemize}
+        \item {\bf Model} (class) provides tools for creating models for use in FastScore. The key features are: \\ (1) the ability to produce models from existing collections of code, and \\ (2) to locally test (simulate a scoring run) and validate a model (check for {\bf schema} conformance and that it produces the expected outputs)
+        \item The {\bf Engine} class is a tool for interacting with an engine in the FastScore fleet. A user creates an {\bf Engine} object by passing it connection information about the fleet: 
+        \begin{verbatim}
+        engine = Engine('https://localhost:8000')
+        \end{verbatim}
+        Once created, the user can deploy {\bf Model}, {\bf Stream}, or {\bf Sensor} objects to the engine, retrieve currently deployed objects, and score data using the {\bf REST API}.
+        \end{itemize}
+\item Naming and Formatting Conventions
+        \begin{itemize}
+        \item {\bf Class} names should be CamelCase with the first letter capitalized, e.g., "ModelManage"
+        \item Function names and variable names should be lowercase and separated by underscores, e.g., "$\text{from}\_\text{string}$"
+        \end{itemize}
+\item Naming FastScore entities \\
+(https://opendatagoup.atlassian.net/wiki/spaces/DD/pages/48875405/From+CLI+to+SDK)
+        \begin{itemize}
+        \item {\bf Service} --- A type of a docker container which may run as a part of a FastScore deployment; e.g. `Model Manage is yet another FastScore service.'' Other terms (avoid): API
+        \item {\bf Suite} --- A set of all FastScore service; e.g. 'FastScore suite includes Model Deploy and 7 other services'
+        \item {\bf  Instance} --- A running {\bf instance} of a {\bf service}; e.g. 'There are two Engine instances running named engine-1 and engine-2.' Other terms (avoid): Container
+        \end{itemize}
+**Names such as {\bf 'Model Manage'} may refer to a {\bf service} or an {\bf instance}. A word 'service' or 'instance' can be appended to such name to avoid the confusion. \\ e.g. ``The Model Manage instance in this case includes 3 models.'' \\ e.g.2 ``The Model Manage service is one of 8 services included in the FastScore suite.''
+
+\item SDK Class hierarchy: The 3 primary Classes---Connect ModelManage, Engine---have parent `InstanceBase'. (what became the ApiClient class)
+\item Connect Class
+        \begin{itemize}
+        \item Connect(proxy\_prefix) -- constructor
+        \item Connect.lookup(sname) -- returns instance of the service (``.'' in Python is ``\$'' in R), and I think ``sname'' in Python is ``self'' in R.
+        \item Connect.get(name) -- returns a named instance
+        \end{itemize}
+\item ModelManage Class
+        \begin{itemize}
+        \item ModelManage.streams.get(name) -- returns an instance of the service
+        \end{itemize}
+
+\end{itemize}
+
+\section*{14 November 2017}
+\begin{itemize}
+\item ``In OpenAPI terms, {\bf paths} are endpoints (resources), such as /users or /reports/summary/, that your API exposes, and {\bf operations} are the HTTP methods used to manipulate these paths, such as GET, POST or DELETE.'' (https://swagger.io/docs/specification/paths-and-operations/)
+\item ``Path parameters are variable parts of a URL path. They are typically used to point to a specific resource within a collection, such as a user identified by ID. A URL can have several path parameters, each denoted with curly braces \{ \}.
+\begin{verbatim}
+GET /users/{id}
+GET /cars/{carId}/drivers/{driverId}
+GET /report.{format}
+\end{verbatim}
+Each path parameter must be substituted with an actual value when the client makes an API call.'' (https://swagger.io/docs/specification/describing-parameters/)
+\end{itemize}
+
+\section*{Chat, 13 November 2017}
+\begin{itemize}
+\item The API client we generate is an R object.
+\item Classes maintain state, help stay organized
+\item The {\bf object "3" is an instance of the "integer" class} 
+\item Keep an eye on spinning tires in mud; ask for help
+\item From Stu: "gnostic impulse" --- balance of learn \& do; 
+\item R-SDK for 1.7 in January
+\item Lower Level: API Client $\rightarrow$ Higher Level: Model Manage, Engine, Connect
+\end{itemize}
+
+\section*{Next Steps}
+Here is a summary of goals for the demo next week:
+\begin{enumerate}
+\item Deploy a running FastScore fleet in a virtual machine running in VirtualBox on your laptop.
+\item Configure VirtualBox port mapping so that that fleet is accessible from your browser on your laptop (outside of the VM). For example, map port 8000 on the guest machine to 8000 on the host machine.
+\item Load some fake models into the fleet. This can be done directly from the FastScore dashboard, and there's no need for these models to actually work.
+\item Using the swagger-codegen generated API clients, interact with the FastScore fleet on your VM to retrieve a list of the models in Model Manage.
+\end{enumerate}
+
+Your R code should look approximately like this:
+\begin{verbatim}
+> connect <- ConnectAPI(proxy_prefix="https://localhost:8000")
+> mm_info <- connect$connect_get('model-manage-1')
+> mm <- ModelManageAPI(mm_info)
+> mm$model_nameslist()
+[1] "Model 1"  [2] "Model 2"  [3] "Model 3"
+\end{verbatim}
+
+\section*{Meeting, 9 November 2017}
+\begin{itemize}
+\item The \verb|api.xxxx.R| files in Matthew's SDK will probably be the ones that get replaced by the files in codegen generated client (package).
+\item Sketch (hurried notes) of his instructions: Load the (codegen) generated package, create instances of API classes, play around inside RStudio trying to... do anything, like list the models running inside the VM FastScore. How does this API client work??
+\end{itemize}
+
+\section*{The Latest}
+\begin{itemize}
+\item Error message:
+\begin{verbatim}
+> ?ActiveModelInfo
+Error in fetch(key) : 
+  lazy-load database '/Library/Frameworks/R.framework/Versions/3.4/Resources/library/swagger/help/swagger.rdb' is corrupt
+\end{verbatim}
+\end{itemize}
+
+
+Concrete next steps.
+\begin{enumerate}
+\item Swagger file: fastscore-api-specs
+\item Download latest version of Swagger Codegen tool, use it to generate R client
+\item See if I can interact with FastScore using it
+\item Compare and contrast it with Python (in Jupytr notebook server??)
+\end{enumerate}
+
+\section*{Slack w/ Matthew}
+\begin{itemize}
+\item ``So, one thing we really need is an R implementation of the FastScore SDK.''
+\item ``We have a swagger file (a list of definitions for the REST api for FastScore) in the fastscore-api-specs repo. Then there's a tool called swagger-codegen that generates an ``API client'' in Python for it. The actual FastScore SDK is a wrapper around the client''
+\item ``The current R version of the SDK doesn't have the swagger-generated client (because when I initially wrote it, swagger-codegen didn't support R)''
+\item ``This is swagger-codegen: https://swagger.io/swagger-codegen/''
+\end{itemize}
+
+\section*{Misc}
+\begin{itemize}
+\item https://opendatagoup.atlassian.net/wiki/spaces/PHT/pages/48760284/FastScore+SDK+Information
+\item Swagger: ``Using the swagger-codegen project, end users generate client SDKs directly from the Open API document...''
+\end{itemize}
+
+\section*{Stuff (13 October 2017)}
+\begin{itemize}
+\item {\bf httr}: R web server interaction package (Matthew thought)
+\item Swagger file - yaml document
+\item Swagger file defines RESTful API that FastScore uses, and Swagger Codegen constructs a client (file? application?) from given Swagger file.
+\item module (Python) = library (R) = package
+\item Client (such as web browswer) interacts with server (such as Google hangout server)
+\item FastScore server = Google server; FastScore SDK is library needed to build (in programming sense) clients
+\item FastScore SDK: provides a library that makes it easy for someone working in another application to interact with FS
+\item My task: {\bf create a package so that R users can interact with FastScore}
+\item ...but...
+\item It should sit on top of client built using Swagger codegen (so that it still works when Maxim changes FastScore), as the Python SDK does.
+\item Process flow
+  \begin{itemize}
+  \item ODG has a Swagger file in \verb|fastscore-api-spec| on GitHub (defines RESTful API FastScore uses)
+  \item Swagger Codegen (automatically) constructs a client (in R, Python, etc.) from a given Swagger file 
+  \item My R package will sit on top of this automatically generated Swagger-Codegen client file
+  \item I will not touch autogenerated file
+  \item This way, when Maxim modifies swagger file, we automatically generate new R client, and my package is untouched.
+  \end{itemize}
+\end{itemize}
+
+\section*{Swagger-codegen}
+(all from their webpage)
+\subsection*{Generating Code}
+
+To generate code from an existing swagger specification -
+\begin{itemize}
+\item If you have Homebrew installed:
+\begin{verbatim}
+swagger-codegen generate -i <path of your Swagger specification> -l <language>
+\end{verbatim}
+Example:
+\begin{verbatim}
+swagger-codegen generate -i http://petstore.swagger.io/v2/swagger.json -l csharp
+\end{verbatim}
+\item Else, you could use: ({\bf this is the one!})
+\begin{verbatim}
+java -jar swagger-codegen-cli-2.2.1.jar generate 
+    -i <path of your Swagger specification> -l <language> 
+\end{verbatim}
+Example:
+\begin{verbatim}
+java -jar swagger-codegen-cli-2.2.1.jar generate 
+    -i http://petstore.swagger.io/v2/swagger.json -l csharp
+\end{verbatim}
+\end{itemize}
+In the above code, we pass two arguments : \verb|- i| and \verb|-l|. \verb|-i| is used to specify the path of your API’s specification. \verb|-l| is used to specify the language you want to generate the code for your specified API’s specification \\
+
+The Codegen creates a README file with all the information for running and building the API. Each language creates a different README, so please go through it to learn about how to build your Swagger defined API.
+
+\section*{General swagger-codegen CLI}
+\begin{itemize}
+\item \verb|java -jar swagger-codegen-cli-2.3.0.jar help|
+\item This worked: 
+\begin{verbatim}ip-192-168-2-6:ODG ABC$
+java -jar swagger-codegen-cli-2.3.0.jar generate (cont)
+     -i /fastscore-api-specs-master/suite-proxy-v2.yaml -l r
+\end{verbatim}
+\end{itemize}
+
+\section{``Best practices for API packages'' -Hadley}
+``R client for the (FastScore) API.''
+\begin{itemize}
+\item Structure of (HTTP) requests
+  \begin{enumerate}
+  \item HTTP verb (GET, POST, PUT, DELETE, etc)
+  \item Base URL for the API
+  \item URL path or endpoint
+  \item URL query arguments (e.g. \verb|?foo=bar|)
+  \item Optional headers
+  \item Optional request body
+  \end{enumerate}
+\item Structure of (HTTP) Responses
+  \begin{enumerate}
+  \item HTTP status code
+  \item Headers, key-value pairs
+  \item Body consisting of XML, JSON, plain text, HTML, etc.
+  \end{enumerate}
+\item API client needs to parse these responses, turning API errors into R errors, and return a useful object to end user.
+\end{itemize}
+
+
+\end{document}
