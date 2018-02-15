@@ -193,15 +193,66 @@ con <- fastscore::Connect$new(apiClient = api)
 mod_man <- fastscore::ModelManage$new(apiClient = api)  
   
   mod_man$model_list(instance = "model-manage-1")$content 
-  mod_man$model_get(instance = "model-manage-1", model = "hello-world") # getting error here and swagger
-  mod_man$stream_get(instance = "model-manage-1", stream = "rest-in")$content
-  mod_man$stream_list(instance = "model-manage-1")$content
+  
+  hw_mod <- mod_man$model_get(instance = "model-manage-1", model = "hello-world") # get 'hello-world' model
+    hw_mod
+    hw_mod$response
+    http_type(hw_mod$response) [1] "application/vnd.fastscore.model-python"
+    hw_mod$response$headers$`content-type` # same
+    cat(hw_mod$content) # 'hello-world' model
+    
+# Debug: mod_man$model_get --> self$apiClient$callApi(...) ======
+  
+  instance = "model-manage-1" 
+  model = "hello-world"
+  urlPath <- "/model-manage-1/1/model/hello-world"
+  
+  # args <- list(...)
+  queryParams <- list()
+  headerParams <- character()
+  
+  resp <- mod_man$apiClient$callApi(
+    url = paste0(mod_man$apiClient$basePath, urlPath),
+    method = "GET",
+    queryParams = queryParams,
+    headerParams = headerParams,
+    body = body)
+  
+  # m_con <- httr::content(resp, as = "text", encoding = "UTF-8")
+  # cat(m_con)
+  
+  result <- httr::content(resp, "text", encoding = "UTF-8")
+  
+  swagger::Response$new(result, resp)
 
-# Dev: Connect$lookup()  (not working for engine, model manage) ====== 
+
+# Dev: schemas ======
+  mod_man$schema_list(instance = "model-manage-1")$content
+  gbm_sch <- mod_man$schema_get(instance = "model-manage-1", schema = "gbm_input")
+  r <- gbm_sch$response
+  c <- gbm_sch$content
+  
+# Dev: streams ======
+  mod_man$stream_get(instance = "model-manage-1", stream = "rest-in")$content
+  mod_man$stream_list(instance = "model-manage-1")$content  
+
+# Dev: create/add schema: Schema$new() ========
 api <- fastscore::InstanceBase$new(basePath = "https://localhost:15080")
 con <- fastscore::Connect$new(apiClient = api)
-  con$connect_get(instance = 'connect')
-  con$lookup(sname = 'connect') # It's alive!!
-  con$lookup(sname = 'engine-1') # content: API client error
-  con$lookup(sname = 'Model-Manage') # content: API client error
+mod_man <- fastscore::ModelManage$new(apiClient = api)  
 
+# devtools::install_github("RevolutionAnalytics/ravro/pkg/ravro")
+
+d <- data.frame(x = c(1,2,3), y = c(4, 5, 6))
+d <- ravro::avro_make_schema(d, name = "my_schema")
+
+new_schema <- Schema$new(name = "my_schema", 
+   model_manage = mod_man,
+   source = d
+   )
+
+str(new_schema$source)
+cat(toJSON(new_schema$source))
+
+mod_man$schema_put(instance = "model-manage-1", schema = "new_schema", 
+                   source = new_schema$source)
