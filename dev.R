@@ -197,45 +197,16 @@ mod_man <- fastscore::ModelManage$new(apiClient = api)
   hw_mod <- mod_man$model_get(instance = "model-manage-1", model = "hello-world") # get 'hello-world' model
     hw_mod
     hw_mod$response
-    http_type(hw_mod$response) [1] "application/vnd.fastscore.model-python"
+    http_type(hw_mod$response) # [1] "application/vnd.fastscore.model-python"
     hw_mod$response$headers$`content-type` # same
     cat(hw_mod$content) # 'hello-world' model
     
-# Debug: mod_man$model_get --> self$apiClient$callApi(...) ======
-  
-  instance = "model-manage-1" 
-  model = "hello-world"
-  urlPath <- "/model-manage-1/1/model/hello-world"
-  
-  # args <- list(...)
-  queryParams <- list()
-  headerParams <- character()
-  
-  resp <- mod_man$apiClient$callApi(
-    url = paste0(mod_man$apiClient$basePath, urlPath),
-    method = "GET",
-    queryParams = queryParams,
-    headerParams = headerParams,
-    body = body)
-  
-  # m_con <- httr::content(resp, as = "text", encoding = "UTF-8")
-  # cat(m_con)
-  
-  result <- httr::content(resp, "text", encoding = "UTF-8")
-  
-  swagger::Response$new(result, resp)
-
-
 # Dev: schemas ======
   mod_man$schema_list(instance = "model-manage-1")$content
-  gbm_sch <- mod_man$schema_get(instance = "model-manage-1", schema = "gbm_input")
-  r <- gbm_sch$response
-  c <- gbm_sch$content
+    gbm_sch <- mod_man$schema_get(instance = "model-manage-1", schema = "gbm_input")
+      gbm_sch$response
+      gbm_sch$content
   
-# Dev: streams ======
-  mod_man$stream_get(instance = "model-manage-1", stream = "rest-in")$content
-  mod_man$stream_list(instance = "model-manage-1")$content  
-
 # Dev: create/add schema: Schema$new() ========
 api <- fastscore::InstanceBase$new(basePath = "https://localhost:15080")
 con <- fastscore::Connect$new(apiClient = api)
@@ -251,8 +222,35 @@ new_schema <- Schema$new(name = "my_schema",
    source = d
    )
 
-str(new_schema$source)
-cat(toJSON(new_schema$source))
+# str(new_schema$source)
+# cat(toJSON(new_schema$source))
 
-mod_man$schema_put(instance = "model-manage-1", schema = "new_schema", 
-                   source = new_schema$source)
+mod_man$schema_put(instance = "model-manage-1", 
+                   schema = "new_schema", 
+                   source = d,
+                   content_type('application/json'))
+
+# mod_man$schema_list(instance = "model-manage-1")$content
+
+mod_man$schema_delete(instance = "model-manage-1",
+                      schema = "new_schema") # NULL = successfully deleted
+
+# mod_man$schema_list(instance = "model-manage-1")$content
+
+
+
+# To-do list ======
+# "Here's what you need to be able to do in Model Manage:"
+# 
+# There are four types of assets (models, streams, schemas, and sensors)
+# For each type:
+# 1. List the names of all assets of that type currently in model manage.
+# 2. Retrieve an object of that type from Model Manage by name.
+# 3. Create an object of that type and add it to Model Manage.
+# 4. Delete an object of that type by name from Model Manage.
+
+# Dev: streams ======
+mod_man$stream_get(instance = "model-manage-1", stream = "rest-in")$content
+mod_man$stream_list(instance = "model-manage-1")$content  
+
+
