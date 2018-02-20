@@ -187,11 +187,12 @@ con <- fastscore::Connect$new(apiClient = api)
   con_get <- con$connect_get(instance = "connect")
   con_get <- con$fleet(instance = "connect")
 
-# Dev: ModelManage$new() =====
+# Dev: ModelManage$new() =======
 api <- fastscore::InstanceBase$new(basePath = "https://localhost:15080")
 con <- fastscore::Connect$new(apiClient = api)
 mod_man <- fastscore::ModelManage$new(apiClient = api)  
   
+# Dev: list/get model =====
   mod_man$model_list(instance = "model-manage-1")$content 
   
   hw_mod <- mod_man$model_get(instance = "model-manage-1", model = "hello-world") # get 'hello-world' model
@@ -199,15 +200,45 @@ mod_man <- fastscore::ModelManage$new(apiClient = api)
     hw_mod$response
     http_type(hw_mod$response) # [1] "application/vnd.fastscore.model-python"
     hw_mod$response$headers$`content-type` # same
+    hw_mod$content
     cat(hw_mod$content) # 'hello-world' model
     
-# Dev: schemas ======
+# Dev: create/add/delete model ======    
+
+# Create fastscore model string
+my_mod_string <- "
+# fastscore.input: my_mod_input
+# fastscore.output: my_mod_output
+
+fs_mod_fun <- function(x){x + 1}
+"
+
+cat(my_mod_string)
+
+my_mod <- Model$new(
+  name = "my_mod",
+  mtype = 'r',
+  source = my_mod_string,
+  model_manage = mod_man
+)
+
+m_put <- mod_man$model_put(instance = "model-manage-1", 
+                   model = "new_model", 
+                   source = my_mod$source,
+                   content_type = 'application/vnd.fastscore.model-r')    
+
+mod_man$model_delete(instance = "model-manage-1",
+                     model = "new_model") # success!!
+
+
+    
+# Dev: get/list schemas ======
   mod_man$schema_list(instance = "model-manage-1")$content
     gbm_sch <- mod_man$schema_get(instance = "model-manage-1", schema = "gbm_input")
       gbm_sch$response
       gbm_sch$content
   
-# Dev: create/add schema: Schema$new() ========
+# Dev: create/add/delete schema: Schema$new() ========
 api <- fastscore::InstanceBase$new(basePath = "https://localhost:15080")
 con <- fastscore::Connect$new(apiClient = api)
 mod_man <- fastscore::ModelManage$new(apiClient = api)  
@@ -237,8 +268,6 @@ mod_man$schema_delete(instance = "model-manage-1",
 
 # mod_man$schema_list(instance = "model-manage-1")$content
 
-
-
 # To-do list ======
 # "Here's what you need to be able to do in Model Manage:"
 # 
@@ -248,6 +277,7 @@ mod_man$schema_delete(instance = "model-manage-1",
 # 2. Retrieve an object of that type from Model Manage by name.
 # 3. Create an object of that type and add it to Model Manage.
 # 4. Delete an object of that type by name from Model Manage.
+
 
 # Dev: streams ======
 mod_man$stream_get(instance = "model-manage-1", stream = "rest-in")$content
