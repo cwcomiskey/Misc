@@ -1,0 +1,61 @@
+\documentclass{article}
+
+\title{Macroeconomic Models: \\ Preliminary Assessment}
+\author{Chris Comiskey, Open Data Group}
+\date{\today}
+
+\usepackage{natbib}
+\bibliographystyle{unsrtnat}
+
+\usepackage{fullpage}
+\usepackage{ulem}
+
+\usepackage{amsmath, amsthm, amssymb, amsfonts}
+\usepackage{mathtools}
+\usepackage{float}
+\usepackage{bbm}
+
+\usepackage{listings}
+
+
+\begin{document}
+
+\maketitle{}
+
+\section*{Overview}
+The set of research methods and results spearheaded by MIT/Harvard Professor Alberto Cavallo, known as the ``Billion Prices'' project, provides calculations of macroeconomic indicators such as Consumer Price Index (CPI). The calculations are similar to, but independent of, those produced and announced by the Bureau of Labor Statistics (BLS). Independent calculation confers an appealing time advantage: access to metrics before public announcement. 
+
+\subsection*{Methods}
+At a high level, Cavallo's methods consist of a few fundamental steps.
+\begin{enumerate}
+\item {\bf Basket of goods replication}.
+The BLS calculates CPI using a ``basket of goods'' consisting of 8018 item-area combinations, selected to holistically reflect the expenditures of a subset of the population. CPI-Urban (CPI-U), for example, covers approximately 89\% of the U.S. population. The proportions of each of eight ``major group'' of goods (comprised of 211 basic indexes), across four U.S. regions (comprised of 38 geographic areas) are carefully chosen and weighted (relying on the Consumer Expenditure Survey) to reflect the expenditures of the target population subset. Cavallo's team creates a proxy basket, presumably with considerable, ongoing economic research.
+\item {\bf Web-scraping and data cleaning.}
+Cavallo's team locates proxy basket goods on the internet, chosen to mirror the BLS ``basket of goods.'' Next, they programmatically collect, parse, and process data from the underlying raw HTML code on the thousands to tens-of-thousands of chosen websites  
+\item {\bf CPI calculation replication.}
+These calculations, though non-trivial, probably represent the easiest of the three fundamental steps. The calculation of CPI-U, for example, is on page 33 of ``Chapter 17. The Consumer Price Index'' of the ``BLS Handbook of Methods.'' The key component of CPI calculations are the ``aggregation weights.'' At this stage of my research I it seems, but I have not confirmed, that these weights are the key secret ingredient.
+\end{enumerate}
+
+\subsection*{Monetization}
+Cavallo's work led to the ``Billion Prices Project'' at the MIT Sloan School of Management, followed by a private company called ``PriceStats'' (https://www.pricestats.com/). PriceStats seems to have one foot in academia, and the other foot in industry through a partnership with State Street (http://www.statestreet.com). Without knowing the details, it seems State Street sells the calculated macroeconomic indicators to financial institutions.
+
+\subsection*{Preliminary Thoughts and Assessment}
+For the currently articulated problem statement, there are at least a few basic choices. 
+\begin{itemize}
+\item {\bf Pay to play}. We could simply procure the data of interest from State Street. The argument in favor of this option includes a sometimes mentioned Auro-ODG dictum ``Let's not redo things that has already been done.'' Cavallo and his team have been researching and calculating macroeconomic indicators for approximately ten years, culminating in a service we can simply purchase.  It might be unnecessary, and inefficient, to try catch up to Cavallo in a comparably short period of time.
+\item {\bf Macroeconomic mimicry}. We could attempt to replicate Cavallo's work. We have a strong, albeit small, data science team. We combine a variety of skills and experience with. Shane worked on a similar project with Visa, and the team has the statistical expertise to reproduce CPI variance reduction procedures and calculations. Though challenging, I think we could figure out how to scrape, extract, and process data from websites. 
+
+In my view replicating the basket of goods, sampling for it, and weighting the multi-level components will be the biggest challenges. These economics challenges will have a non-trivial startup cost without an economist in tow.
+\item {\bf Further discussion and meta-research}. We don't have to decide yet. We can reach out to State Street and see what they offer, and how much it costs. We can conduct further research on the aggregation weights, and how extensive the proxy basket of goods needs to be to adequately pick up on trends. We can revisit the problem statement to further clarify our goals, and think over modeling vs. measuring trade-offs. 
+
+
+\end{itemize}
+We should at least make inquiries at State Street, in addition to  discussing this further and conducting an informal cost-benefit analysis. We need to think about how valuable this data is to us---much are we willing to pay for it. On the other hand, how many man-hours would it take us, and how many man-hours are we willing to devote to it?
+
+
+
+
+
+
+
+\end{document}
