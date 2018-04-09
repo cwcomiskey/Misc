@@ -3,61 +3,6 @@
 httr::set_config(httr::config(ssl_verifypeer = FALSE)) # global ignore-self-certify config
 devtools::document()
 
-# 1: strings ======
-paste()
-paste0()
-file.path()
-gsub()
-
-cat("testing, 1, 3, ", x, ", 7, 9", sep = "")
-
-paste("~/a/very/long/path/here",
-      "/and/then/some/more",
-      "/and/then/some/more",
-      "/and/then/some/more", sep=",")
-
-?cat
-
-# gsub(...)
-# gsub(pattern, replacement, x) 
-# look for 'pattern' in 'x' and replace it with 'replacement'
-urlPath <- "/{instance}/1/connect"
-instance <- "woohoo"
-gsub(paste0("\\{", "instance", "\\}"), `instance`, urlPath)
-
-instance <- "connect"
-urlPath <- "/{instance}/1/connect"
-urlPath <- gsub(paste0("\\{", "instance", "\\}"), `instance`, urlPath); urlPath
-paste0(con$apiClient$basePath, urlPath) # [1] "https://localhost:15080/connect/1/connect"
-
-
-# 1.5: if{} else{}
-# 2: return() =========
-.test <- function() "This work?"
-test()
-
-t <- function(){
-  d <- list()
-  for(i in 1:5){
-    d[[paste(i)]] <- i
-  }
-  return(d)
-}
-t()
-dat <- t()
-x <- dat["2"]
-str(x)
-
-t2 <- function(){
-  d <- list()
-  for(i in names(dat)){
-    d[[paste(i)]] <- i
-  }
-  d
-}
-t2()
-
-# "If there are no explicit returns from a function, the value of the last evaluated expression is returned automatically in R."
 
 # 3: FastScoreError$new() ======
 fse <- FastScoreError$new(message = "Unable to retrieve active sensors", 
@@ -87,22 +32,6 @@ b$name
 # 6.1: InstanceBase$new ========
 # api_cli <- InstanceBase$new(name = "FS") # don't need this; see 7
 
-# 6.2: parse_url(), build_url() ======
-httr::parse_url("https://localhost:15080/api/1/service")
-  # $scheme
-  # [1] "https"
-  # $hostname
-  # [1] "localhost"
-  # $port
-  # [1] "15080"
-  # $path
-  # [1] "api/1/service"
-A <- httr::parse_url("https://localhost/api/1/service")
-B <- httr::parse_url("https://localhost:15080")
-
-
-A$port <- B$port
-httr::build_url(A)
 # 7: Connect$new() =====
 #     Proxy prefix = https://localhost:15080
 #     Base path = api/1/service
@@ -121,51 +50,6 @@ con <- fastscore::Connect$new(proxy_prefix = "https://localhost:15080")
 
 
 
-# 7.1 missing() ====
-  
-  # Test 1
-  test <- function(A, B){
-    if (missing(A)) {A <- B}
-    A + B
-  }
-  
-  test(3, 4)
-  test(B = 4)
-  
-  # Test 2
-  test <- function(A = NA, B = NA){
-    if (missing(A)) {A <- B}
-    A + B
-  }
-  
-  test(3, 4)
-  test(B = 4)
-  
-  # Test 3
-  test <- function(A = NULL, B = NA){
-    if (missing(A)) {A <- B}
-    A + B
-  }
-  
-  test(3, 4)
-  test(B = 4)
-  
-# 7.3: stopifnot() ======
-stopifnot(FALSE)
-stop(
-     FastScoreError$new(
-       message = "basePath must use HTTPS scheme, e.g. https://dashboard:8000")$error_string()
-     )
-
-# 7.4: function(){} w/ tryCatch() w/ stop() ======
-  t3 <- function(){
-    tryCatch(
-      xx <- mean(rnorm(a2)), # swagger::connect_get()
-      error = function(e) stop("Cannot retrieve fleet info, ", e)
-    )
-    print(xx)
-  }
-  t3()
 # 8: Client API + Connect API ======
 
 # Client API
@@ -192,7 +76,7 @@ api <- fastscore::InstanceBase$new(basePath = "https://localhost:15080")
 con <- fastscore::Connect$new(apiClient = api)
 mod_man <- fastscore::ModelManage$new(apiClient = api)  
   
-# Dev: list/get model =====
+# Dev: model -- list/get/create/add/delete  =====
   mod_man$model_list(instance = "model-manage-1")$content 
   
   hw_mod <- mod_man$model_get(instance = "model-manage-1", model = "hello-world") # get 'hello-world' model
@@ -203,8 +87,6 @@ mod_man <- fastscore::ModelManage$new(apiClient = api)
     hw_mod$content
     cat(hw_mod$content) # 'hello-world' model
     
-# Dev: create/add/delete model ======    
-
 # Create fastscore model string
 my_mod_string <- "
 # fastscore.input: my_mod_input
@@ -213,7 +95,7 @@ my_mod_string <- "
 fs_mod_fun <- function(x){x + 1}
 "
 
-cat(my_mod_string)
+# cat(my_mod_string)
 
 my_mod <- Model$new(
   name = "my_mod",
@@ -232,13 +114,13 @@ mod_man$model_delete(instance = "model-manage-1",
 
 
     
-# Dev: get/list schemas ======
+# Dev: schemas -- get/list  ======
   mod_man$schema_list(instance = "model-manage-1")$content
     gbm_sch <- mod_man$schema_get(instance = "model-manage-1", schema = "gbm_input")
       gbm_sch$response
       gbm_sch$content
   
-# Dev: create/add/delete schema: Schema$new() ========
+# Dev: schemas -- create/add/delete  ========
 api <- fastscore::InstanceBase$new(basePath = "https://localhost:15080")
 con <- fastscore::Connect$new(apiClient = api)
 mod_man <- fastscore::ModelManage$new(apiClient = api)  
@@ -268,19 +150,85 @@ mod_man$schema_delete(instance = "model-manage-1",
 
 # mod_man$schema_list(instance = "model-manage-1")$content
 
-# To-do list ======
-# "Here's what you need to be able to do in Model Manage:"
-# 
-# There are four types of assets (models, streams, schemas, and sensors)
-# For each type:
-# 1. List the names of all assets of that type currently in model manage.
-# 2. Retrieve an object of that type from Model Manage by name.
-# 3. Create an object of that type and add it to Model Manage.
-# 4. Delete an object of that type by name from Model Manage.
+# Dev: streams -- list/get/create/add/delete ======
+mod_man$stream_list(instance = "model-manage-1") 
+
+fs_stream <- mod_man$stream_get(instance = "model-manage-1", stream = "rest-in")
+fs_stream$content
+unlist(fs_stream$content, recursive = FALSE)
+
+my_stream <- list("Encoding" =  "json", 
+  "Envelope" = NULL, 
+  "Transport" = list("Type" = "REST"), 
+  "Schema" = list("ref" = "my_model_input"))
+
+my_str <- Stream$new(name = "my_stream",
+                     model_manage = "mod_man",
+                     source = my_stream)
+
+mod_man$stream_put(instance = "model-manage-1", 
+                   stream = "my_stream",
+                   desc = my_stream, # descriptor = body = source
+                   content_type('application/json'))
+
+# mod_man$stream_list(instance = "model-manage-1") 
+
+mod_man$stream_delete(instance = "model-manage-1", 
+                      stream = "my_stream")
+
+# mod_man$stream_list(instance = "model-manage-1") 
 
 
-# Dev: streams ======
-mod_man$stream_get(instance = "model-manage-1", stream = "rest-in")$content
-mod_man$stream_list(instance = "model-manage-1")$content  
+
+# Dev: sensors -- list/get/create/add/delete ======
+my_sensor <- list("Tap" = "sys.memory",
+                    "Activate" = list("Type" = "regular", "Interval" = 0.5),
+                    "Report" = list("Interval" = 3.0),
+                    "Filter" = list("Type" = ">=", "Threshold" = "1G")
+                  )
+
+my_sen <- Sensor$new(name = "my_sensor",
+                     model_manage = "mod_man",
+                     source = my_sensor)
+
+mod_man$sensor_put(instance = "model-manage-1",
+                   sensor = my_sen$name,
+                   desc = my_sen$source,
+                   content_type('application/json')
+                   )
 
 
+mod_man$sensor_list(instance = "model-manage-1")$content
+
+sen <- mod_man$sensor_get(instance = "model-manage-1", sensor = "my_sensor")
+unlist(sen$content, recursive = FALSE)
+
+mod_man$sensor_delete(instance = "model-manage-1", sensor = "my_sensor")
+
+# Dev: Engine$new() ======
+api <- fastscore::InstanceBase$new(basePath = "https://localhost:15080")
+con <- fastscore::Connect$new(apiClient = api)
+mod_man <- fastscore::ModelManage$new(apiClient = api)
+  # mod_man$model_list(instance = "model-manage-1")
+eng <- fastscore::Engine$new(apiClient = api)
+  # eng[["apiClient"]][["basePath"]]
+
+# Get model ==== #
+gbm <- mod_man$model_get(instance = "model-manage-1", model = "auto_gbm")
+  # gbm$response
+  # cat(gbm$content)
+  # gbm$path
+  
+# load/unload model ==== #
+cd = paste('x-model; name="', "auto_gbm", '"', sep='')
+  eng$model_load(instance = "engine-1", data = gbm[["content"]],
+                 content_type = 'application/vnd.fastscore.model-python',
+                 content_disposition = cd)
+
+  eng$model_unload(instance = "engine-1")
+
+# Load model
+eng$model_load(instance = "engine-1", data = ag, 
+               content_type = 'application/vnd.fastscore.model-python')
+
+  
