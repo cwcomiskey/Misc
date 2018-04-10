@@ -4,10 +4,12 @@ library(devtools)
 library(readr)
 library(dplyr)
 library(stringr)
-install_github("mikeasilva/blsAPI")
-library(blsAPI)
+# install_github("mikeasilva/blsAPI")
+# library(blsAPI)
 library(jsonlite)
 library(httr)
+library(ggplot2)
+library(lubridate)
 
 # My v2 key: 968f207631b149269ac5603c9424c35c
 
@@ -20,7 +22,8 @@ item_codes <- item_codes %>% mutate(item = as.character(item))
 
 # one series: GET request
 # multiple series: POST request
-# I FIGURED IT OUT!! POST REQUEST!!
+
+# httr, e.g. 1 ======
 
 body <- list(
   'seriesid'=c('LAUCN040010000000005', 'LAUCN040010000000006'), 
@@ -34,6 +37,39 @@ resp <- httr::POST(
   verbose())
 
 fromJSON(content(resp, "text"))
+
+# httr, e.g. 2 =========
+
+body <- list(
+  'seriesid' = c('APU0000701111', 'APU0000701312'),
+  'startyear' = 1998, 'endyear' = 2018,
+  'registrationKey' = '968f207631b149269ac5603c9424c35c'
+)
+
+resp <- httr::POST(
+  url = "https://api.bls.gov/publicAPI/v2/timeseries/data/",
+  body = body, encode = "json", 
+  verbose())
+
+dat <- fromJSON(content(resp, "text"))
+str(dat)
+
+dat2 <- dat[["Results"]][["series"]][["data"]][[1]]
+
+dat2 <- select(dat2, year, periodName, value)
+dat2$year <- year(parse_date_time(dat2$year, "%y"))
+dat2$month <- month(parse_date_time(dat2$periodName, "%m"))
+
+for(i in 1:240){
+  if(nchar(dat2$month[i]) == 1) {
+    dat2$month[i] <- paste0(0, dat2$month[i])
+}}
+
+dat2 <- dat2 %>% mutate(date = ymd(paste0(year, month, "01")),
+                        value = as.numeric(value))
+
+ggplot(data = dat2) + 
+  geom_line(aes(x = date, y = value))
 
 # blsAPI package ======
 # Ex 1
