@@ -133,3 +133,28 @@ dat2 <- filter(dat, series_id %in% unique(dat$series_id)[1:12])
 ggplot(data = dat2) + 
   geom_line(aes(x = date, y = value)) + 
   facet_wrap(~ series_id, scales = "free")
+
+
+# area_codes  =====
+area_dat <- httr::GET(
+  url = "https://download.bls.gov/pub/time.series/cu/cu.area") %>% content("text") %>% data.table::fread() %>% select(V1, V2, V3) 
+colnames(area_dat) <- c("area_code", "area_name", "display_level")
+
+# item_codes ====
+# https://download.bls.gov/pub/time.series/cu/cu.item
+item_codes <- httr::GET(
+  url = "https://download.bls.gov/pub/time.series/cu/cu.item") %>% content("text") %>% data.table::fread() %>% select(V1, V2, V3) 
+colnames(item_codes) <- c("item_code", "item_name",	"display_level")
+
+filter(item_codes, display_level == 0)
+
+# httr, cu.series, Rosetta Stone ======
+
+# https://download.bls.gov/pub/time.series/cu/cu.series
+
+dat <- httr::GET(
+  url = "https://download.bls.gov/pub/time.series/cu/cu.series") %>% content("text") %>% data.table::fread()
+
+names(dat)
+length(unique(dat$area_code))
+filter(dat, item_code == "SAA", area_code == "0000")
