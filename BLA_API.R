@@ -149,7 +149,6 @@ ggplot(data = dat2) +
   geom_line(aes(x = date, y = value)) + 
   facet_wrap(~ series_id, scales = "free")
 
-
 # area_codes: cu.area  =====
 area_dat <- httr::GET(
   url = "https://download.bls.gov/pub/time.series/cu/cu.area") %>% content("text") %>% data.table::fread() %>% select(V1, V2, V3) 
@@ -158,7 +157,10 @@ colnames(area_dat) <- c("area_code", "area_name", "display_level")
 # item_codes: cu.item =========================================
 # https://download.bls.gov/pub/time.series/cu/cu.item
 item_codes <- httr::GET(
-  url = "https://download.bls.gov/pub/time.series/cu/cu.item") %>% content("text") %>% data.table::fread() %>% select(V1, V2, V3) 
+  url = "https://download.bls.gov/pub/time.series/cu/cu.item") %>% 
+  content("text") %>% 
+  data.table::fread() %>% 
+  select(V1, V2, V3) 
 colnames(item_codes) <- c("item_code", "item_name",	"display_level")
 
 # table(item_codes$display_level)
@@ -180,7 +182,7 @@ names(meta_dat)
 length(unique(meta_dat$area_code)) # [1] 58 areas
 length(unique(meta_dat$item_code)) # [1] 399 items
 
-# all-items (one) series: cu.data.1.AllItems =================================
+# all-in-one series: cu.data.1.AllItems =================================
 all <- httr::GET(
   url = "https://download.bls.gov/pub/time.series/cu/cu.data.1.AllItems") %>% 
   content("text") %>% 
@@ -192,9 +194,9 @@ table(all$series_id)
 
 
 
-# The rest =======================================
+# All category-item series: cu.data.xx.category =====================
 # https://download.bls.gov/pub/time.series/cu/ + ...
-ends <- c("cu.data.11.USFoodBeverage", "cu.data.12.USHousing", 
+ends <- c("cu.data.1.AllItems", "cu.data.11.USFoodBeverage", "cu.data.12.USHousing", 
           "cu.data.13.USApparel", "cu.data.14.USTransportation", 
           "cu.data.15.USMedical", "cu.data.16.USRecreation", 
           "cu.data.17.USEducationAndCommunication", 
@@ -207,20 +209,141 @@ for(i in 1:length(ends)){
     data.table::fread() 
 }
 
+# Primary categories df =================
+
+# Primary categories item codes
+items0 <- filter(item_codes, display_level == 0) %>% .[c(3,5:12),]
+
+# Meta-data for all primary categories
+series0_meta_data <- filter(meta_dat, 
+                            item_code %in% items0$item_code, # "Major Group"
+                            area_code == "0000",             # Nat'l avg.
+                            seasonal == "U",
+                            periodicity_code == "R")
+
+# Food and beverage test run ====== 
+month_convert <- function(m){
+  if (m == "M01") {
+    return("January")
+  } else if (m == "M02") {
+    return("February")
+  } else if (m == "M03") {
+    return("March")
+  } else if (m == "M04") {
+    return("April")
+  } else if (m == "M05") {
+    return("May")
+  } else if (m == "M06") {
+    return("June")
+  } else if (m == "M07") {
+    return("July")
+  } else if (m == "M08") {
+    return("August")
+  } else if (m == "M09") {
+    return("September")
+  } else if (m == "M10") {
+    return("October")
+  } else if (m == "M11") {
+    return("November")
+  } else if (m == "M12") {
+    return("December")
+  } else {
+    return(m)
+  }
+}
+m <- c("M01", "M02", "M03", "M04", "M05", "M06", "M07", "M08", "M09", "M10", "M11", "M12")
+
 FB <- d[[1]]
-sum(as.numeric(grepl("0000", FB$series_id))) # "0000" in Food&Bev series IDs
-length(unique(FB$series_id))
 
-# Primary (level 0) categories =================
-level0 <- filter(item_codes, display_level == 0) %>% .[c(3,5:12),]
+FB0 <- FB %>% filter(
+  series_id %in% series0_meta_data$series_id, period %in% m) %>%
+  mutate(month = substring(period, 2), 
+         date = ymd(paste0(year, month, "01"))) %>%
+  select(series_id, value, date)
 
-level0.2 <- filter(meta_dat, 
-                   item_code %in% level0$item_code, # "Major Group" item code
-                   area_code == "0000",             # Nat'l avg.
-                   seasonal == "U",
-                   periodicity_code == "R")
+ggplot(data = FB0) + geom_line(aes(x = date, y = value)) + 
+  ggtitle("Food & Beverage") + 
+  theme(plot.title = element_text(hjust = 0.5))
 
-# Food and Beverage index (calling it level 0 index) ("Major Groups")
-FB_0 <- FB %>% filter(series_id %in% level0.2$series_id) # YESSSSS!!!!!
-length(unique(FB_0$series_id))
+# Housing test run =====
+H <- d[[2]]
 
+H0 <- H %>% filter(
+  series_id %in% series0_meta_data$series_id, period %in% m) %>%
+  mutate(month = substring(period, 2), 
+         date = ymd(paste0(year, month, "01"))) %>%
+  select(series_id, value, date)
+
+# All primary categories test run ======
+all <- data.frame()
+for(i in 1:length(d)){
+  series_data <- d[[i]] %>% filter(
+    series_id %in% series0_meta_data$series_id, period %in% m) %>%
+    mutate(month = substring(period, 2), 
+           date = ymd(paste0(year, month, "01")),
+           item_code = substring(series_id, 9)) %>%
+    select(series_id, value, date, item_code)
+  
+  all <- rbind.data.frame(all, series_data)
+}
+
+all <- left_join(all, items0)
+
+
+ggplot(data = all) + geom_line(aes(x = date, y = value)) + 
+  facet_wrap(~ item_name)
+
+# ggsave("primaryCPIcats_notfree.jpg", height = 8, width = 8)
+
+# correlation test run ======
+# cor(Food & Beverage, Housing)
+unique(all$item_name)
+FB <- filter(all, item_name == "Food and beverages")
+Tr <- filter(all, item_name == "Transportation")
+
+date_intersect <- intersect(
+  interval(min(Tr$date), max(Tr$date)),
+  interval(min(FB$date), max(FB$date))
+        )
+
+FB2 <- filter(FB, date %within% date_intersect)
+Tr2 <- filter(Tr, date %within% date_intersect)
+
+cor(FB2$value, Tr2$value)
+
+ggplot() + geom_point(aes(x = FB2$value, y = Tr2$value))
+
+# pseudo-algorithm (failing right now) =====
+# (1) Pick two categories
+# (2) find respective date ranges
+# (3) intersect date ranges
+# (4) filter respective data sets
+# (5) cor(d1, d2)
+
+nam <- unique(all$item_name)
+matr <- matrix(nrow = length(nam), ncol = length(nam))
+for(i in 1:length(nam)){
+  for(j in 1:length(nam)){
+    
+    A <- filter(all, item_name == nam[i])
+    B <- filter(all, item_name == nam[j])
+    
+    date_intersect <- intersect(
+      interval(min(A$date), max(A$date)),
+      interval(min(B$date), max(B$date)))
+    
+    A2 <- filter(A, date %within% date_intersect)
+    B2 <- filter(B, date %within% date_intersect)
+    
+    matr[i,j] <- cor(A2$value, B2$value)
+    
+  }
+}
+
+# Next attempt =====
+# What I want:
+#     [Date rows] x [series_id columns] matrix filled with index values
+# 
+# How:
+# (1) Modify cu.data.xx.category download to filter down to: date, id, value
+# (2) Bunch of 1 x 1 joins preserving all dates (union of dates)
