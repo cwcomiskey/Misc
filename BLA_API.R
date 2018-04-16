@@ -218,12 +218,7 @@ c <- grid.arrange(a, b)
 
 ggsave("FBandTrans_autocorr.jpg", plot = c, height = 4, width = 6)
 
-# pseudo-algorithm (failing right now) =====
-# (1) Pick two categories
-# (2) find respective date ranges
-# (3) intersect date ranges
-# (4) filter respective data sets
-# (5) cor(d1, d2)
+# "major group" correlation matrix =====
 
 #     series_id                series_title
 # 1 CUUR0000SA0                   All items 
@@ -264,4 +259,66 @@ for(i in 1:length(all_dat)){
     corr_matr[i,j] <- with(joined, cor(value.x, value.y, use = "complete.obs"))
   }
 }
+round(corr_matr, 4)
 
+corr_melt <- melt(corr_matr)
+ggplot(data = corr_melt) + 
+  geom_tile(aes(x = Var1, y = Var2, fill = value)) +
+  scale_fill_distiller(palette = "YlOrRd") +
+  scale_x_continuous(
+    expand=c(0,0), 
+    breaks=1:9, 
+    labels=c("All", "App", "E&C", "F&B", "OGaS", "H", "MC", "R", "T")) +
+  scale_y_continuous(expand=c(0,0), breaks=1:9, labels=major_group$item_name) 
+
+# First diff. correlation matrix =======
+major_groups_dat <- major_groups_dat %>% 
+  group_by(series_id) %>% 
+  mutate(lag1 = value - lag(value))
+
+for(i in 1:length(all_dat)){
+  
+  if(i == 1){
+    corr_matr_lag1 <- matrix(nrow = length(all_dat), ncol = length(all_dat))
+  }
+  
+  for(j in 1:length(all_dat)){
+    
+    groupA <- filter(major_groups_dat, 
+                     series_id == major_group_meta_data$series_id[i])
+    groupB <- filter(major_groups_dat, 
+                     series_id == major_group_meta_data$series_id[j])
+    
+    date_intersect <- intersect(
+      interval(min(groupA$date), max(groupA$date)),
+      interval(min(groupB$date), max(groupB$date))
+    )
+    
+    groupA2 <- filter(groupA, date %within% date_intersect)
+    groupB2 <- filter(groupB, date %within% date_intersect)
+    
+    joined <- full_join(groupA2[,c("lag1", "date")], 
+                        groupB2[,c("lag1", "date")], 
+                        by = "date")
+    
+    corr_matr_lag1[i,j] <- with(joined, cor(lag1.x, lag1.y, use = "complete.obs"))
+  }
+}
+round(corr_matr_lag1, 2)
+colnames(corr_matr_lag1) <- c("All", "App", "E&C", "F&B", 
+                              "OGaS", "H", "MC", "R", "T")
+rownames(corr_matr_lag1) <- major_group$item_name
+
+corr_melt_lag1 <- melt(corr_matr_lag1)
+
+ggplot(data = corr_melt_lag1) + 
+  geom_tile(aes(x = Var1, y = Var2, fill = value)) +
+  scale_fill_distiller(palette = "YlOrRd", trans="reverse") +
+  coord_equal() +
+  scale_x_continuous(
+    expand=c(0,0), 
+    breaks=1:9, 
+    labels=c("All", "App", "E&C", "F&B", "OGaS", "H", "MC", "R", "T")) +
+  scale_y_continuous(expand=c(0,0), breaks=1:9, labels=major_group$item_name)
+
+ggsave("lag1_corr.jpg", height = 8, width = 8)  
