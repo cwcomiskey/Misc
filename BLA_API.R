@@ -43,9 +43,7 @@ library(ggfortify)
 # https://download.bls.gov/pub/time.series/cu/
 # https://download.bls.gov/pub/time.series/ap/
 
-# httr -- .txt from BLS, F&B example =====
-
-# e.g.
+# e.g. ====
 dat <- httr::GET(
   url = "https://download.bls.gov/pub/time.series/cu/cu.data.11.USFoodBeverage") 
 dat <- content(dat, "text")
@@ -141,7 +139,8 @@ end_points <- c("cu.data.1.AllItems", "cu.data.11.USFoodBeverage",
 for(i in 1:length(end_points)){
   if(i == 1) all_dat <- list()
   all_dat[[i]] <- httr::GET(
-    url = paste0("https://download.bls.gov/pub/time.series/cu/", end_points[i])) %>% 
+    url = paste0("https://download.bls.gov/pub/time.series/cu/", 
+                 end_points[i])) %>% 
     content("text") %>% 
     data.table::fread() 
 }
@@ -322,3 +321,84 @@ ggplot(data = corr_melt_lag1) +
   scale_y_continuous(expand=c(0,0), breaks=1:9, labels=major_group$item_name)
 
 ggsave("lag1_corr.jpg", height = 8, width = 8)  
+
+# Transportation Major Group deep(er) dive =====
+
+m <- c("M01", "M02", "M03", "M04", "M05", "M06", "M07", "M08", 
+       "M09", "M10", "M11", "M12")
+
+# Get data ==
+transportation_dat <- httr::GET(
+  url = "https://download.bls.gov/pub/time.series/cu/cu.data.14.USTransportation") %>% 
+  content("text") %>% 
+  data.table::fread() %>%
+  filter(period %in% m) %>%
+  mutate(month = substring(period, 2), 
+         date = ymd(paste0(year, month, "01"))) %>%
+  select(series_id, date, value)
+
+# trim meta_dat for join ==
+meta_dat <- meta_dat %>% 
+  select(series_id, area_code, item_code, seasonal, 
+         periodicity_code, base_period, series_title) 
+
+# Add meta-info to transportation data ==
+transportation_dat <- left_join(transportation_dat, meta_dat, by = "series_id") %>%
+  filter(area_code == "0000", seasonal == "U", periodicity_code == "R") %>%
+  mutate(series_title = str_replace(series_title, " in U.S. city average, all urban consumers, not seasonally adjusted", "")) %>% 
+  left_join(., item_dat[,-"item_name"])
+
+# Transportation data "display levels" ==
+td_levels <- transportation_dat %>% 
+  group_by(series_id) %>% 
+  summarise(mean(display_level))
+# 0  1  2  3  4 
+# 1  3  9 17 10
+
+# Filter to levels 0,1,2 and calculate lag1
+trans_dat_012 <- transportation_dat %>% 
+  filter(display_level %in% c(0, 1, 2)) %>%
+  group_by(series_id) %>%
+  mutate(lag1value = value - lag(value)) # ** MONTH-TO-MONTH CHANGES **
+
+# Correlation matrix ==
+names012 <- unique(trans_dat_012$series_id)
+titles012 <- unique(trans_dat_012$series_title)
+for(i in 1:length(names012)){
+  if(i==1) {
+    corr_matr <- matrix(nrow = length(names012), ncol = length(names012))
+  }
+  groupA <- filter(trans_dat_012, series_id == names012[i])
+  
+  for(j in 1:length(names012)){
+    groupB <- filter(trans_dat_012, series_id == names012[j])
+    
+    date_intersect <- intersect(
+      interval(min(groupA$date), max(groupA$date)),
+      interval(min(groupB$date), max(groupB$date))
+    )
+    
+    groupA2 <- filter(groupA, date %within% date_intersect)
+    groupB2 <- filter(groupB, date %within% date_intersect)
+    
+    joined <- full_join(groupA2[,c("lag1value", "date")], 
+                        groupB2[,c("lag1value", "date")], 
+                        by = "date")
+    
+    corr_matr[i,j] <- with(joined, cor(lag1value.x, lag1value.y, use = "complete.obs"))
+  }
+}
+
+series_id_title <- trans_dat_012 %>% 
+  group_by(series_id) %>% 
+  summarise(d = unique(series_title))
+
+rownames(corr_matr) <- titles012
+round(corr_matr, 2)
+round(corr_matr[-c(6,7,9,12,13), -c(6,7,9,12,13)], 2) # Bingo.
+
+colnames(corr_matr_lag1) <- c("All", "App", "E&C", "F&B", "OGaS", "H", "MC", "R", "T")
+
+ggplot(data = trans_dat_012) +
+  geom_line(aes(x = date, y = value)) +
+  facet_wrap(~ series_title, scales = "free")
