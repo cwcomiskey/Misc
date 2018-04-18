@@ -343,35 +343,41 @@ meta_dat <- meta_dat %>%
          periodicity_code, base_period, series_title) 
 
 # Add meta-info to transportation data ==
-transportation_dat <- left_join(transportation_dat, meta_dat, by = "series_id") %>%
+transportation_dat <- left_join(transportation_dat, 
+                                meta_dat, by = "series_id") %>%
   filter(area_code == "0000", seasonal == "U", periodicity_code == "R") %>%
   mutate(series_title = str_replace(series_title, " in U.S. city average, all urban consumers, not seasonally adjusted", "")) %>% 
   left_join(., item_dat[,-"item_name"])
 
 # Transportation data "display levels" ==
-td_levels <- transportation_dat %>% 
+tdat_levels <- transportation_dat %>% 
   group_by(series_id) %>% 
   summarise(mean(display_level))
+table(tdat_levels$`mean(display_level)`)
 # 0  1  2  3  4 
 # 1  3  9 17 10
 
 # Filter to levels 0,1,2 and calculate lag1
-trans_dat_012 <- transportation_dat %>% 
+transportation_dat_012 <- transportation_dat %>% 
   filter(display_level %in% c(0, 1, 2)) %>%
   group_by(series_id) %>%
   mutate(lag1value = value - lag(value)) # ** MONTH-TO-MONTH CHANGES **
 
 # Correlation matrix ==
-names012 <- unique(trans_dat_012$series_id)
-titles012 <- unique(trans_dat_012$series_title)
-for(i in 1:length(names012)){
-  if(i==1) {
-    corr_matr <- matrix(nrow = length(names012), ncol = length(names012))
-  }
-  groupA <- filter(trans_dat_012, series_id == names012[i])
+titles012 <- unique(transportation_dat_012$series_title)
+
+IDs <- unique(transportation_dat_012$series_id)
+for(i in 1:length(IDs)){
   
-  for(j in 1:length(names012)){
-    groupB <- filter(trans_dat_012, series_id == names012[j])
+  if(i==1) {
+    corr_matr <- matrix(nrow = length(IDs), 
+                        ncol = length(IDs))
+    }
+
+  for(j in 1:length(IDs)){
+    
+    groupA <- filter(transportation_dat_012, series_id == IDs[i])
+    groupB <- filter(transportation_dat_012, series_id == IDs[j])
     
     date_intersect <- intersect(
       interval(min(groupA$date), max(groupA$date)),
@@ -385,19 +391,20 @@ for(i in 1:length(names012)){
                         groupB2[,c("lag1value", "date")], 
                         by = "date")
     
-    corr_matr[i,j] <- with(joined, cor(lag1value.x, lag1value.y, use = "complete.obs"))
+    corr_matr[i,j] <- with(joined, cor(lag1value.x, lag1value.y, 
+                                       use = "complete.obs"))
   }
 }
 
-series_id_title <- trans_dat_012 %>% 
+series_id_title <- transportation_dat_012 %>% 
   group_by(series_id) %>% 
   summarise(d = unique(series_title))
 
 rownames(corr_matr) <- titles012
-round(corr_matr, 2)
-round(corr_matr[-c(6,7,9,12,13), -c(6,7,9,12,13)], 2) # Bingo.
+cm <- round(corr_matr[-c(2, 3, 10), -c(2, 3, 10)], 3) # Bingo.
 
-colnames(corr_matr_lag1) <- c("All", "App", "E&C", "F&B", "OGaS", "H", "MC", "R", "T")
+colnames(cm) <- c("Tr", "MVs", "Fuel", "P&E", "M&R", "Ins", "Fees", "Air", "Inter", "Intra")
+cm
 
 ggplot(data = trans_dat_012) +
   geom_line(aes(x = date, y = value)) +
