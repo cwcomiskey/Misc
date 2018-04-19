@@ -82,8 +82,9 @@ CPI <- httr::GET(
   filter(series_id == "CUUR0000SA0",
          period %in% m) %>%
   mutate(month = substring(period, 2), 
-         date = ymd(paste0(year, month, "01"))) %>%
-  select(series_id, date, value)
+         date = ymd(paste0(year, month, "01")),
+         lag1 = value - lag(value)) %>%
+  select(series_id, date, value, lag1)
 
 # Major Groups (list): cu.data.xx.category =====================
 # https://download.bls.gov/pub/time.series/cu/{...}
@@ -101,6 +102,7 @@ for(i in 1:length(end_points)){
                  end_points[i])) %>% 
     content("text") %>% 
     data.table::fread() 
+  if(i == length(end_points)) rm(end_points)
 }
 
 # Major Group meta-data =================
@@ -339,18 +341,75 @@ ggplot(data = trans_dat_012) +
   geom_line(aes(x = date, y = value)) +
   facet_wrap(~ series_title, scales = "free")
 
-# Just CPI ======
-cpi <- all_dat[[1]]
-m <- c("M01", "M02", "M03", "M04", "M05", "M06", "M07", "M08", 
-       "M09", "M10", "M11", "M12")
+# CPI, stratum correlation table ======
 
-cpi <- cpi %>% 
-  filter(period %in% m,
-         series_id == "CUUR0000SA0") %>%
-  mutate(month = substring(period, 2), 
-         date = ymd(paste0(year, month, "01")),
-         item_code = substring(series_id, 9),
-         lag1value = value - lag(value)) %>%
-  select(series_id, value, date, item_code) %>% 
-  left_join(.,meta_dat) 
+# Strata (level 2) meta-data
+strata <- item_dat %>%
+  filter(display_level == 2)
 
+# add item levels
+meta_dat <- left_join(meta_dat, item_dat) %>%
+  filter(area_code == "0000",
+         seasonal == "U",
+         periodicity_code == "R",
+         item_code %in% strata$item_code); rm(item_dat)
+
+strata_meta_dat <- left_join(strata, meta_dat); rm(strata, meta_dat)
+
+for(i in 1:length(all_dat)){
+  if(i == 1) dat <- data.frame()
+  
+  major_group_i <- all_dat[[i]] %>% 
+    filter(period %in% m,
+           series_id %in% strata_meta_dat$series_id) %>%
+    mutate(month = substring(period, 2), 
+           date = ymd(paste0(year, month, "01"))) %>%
+    select(series_id, value, date)
+  
+  dat <- rbind.data.frame(dat, major_group_i)
+  
+  if(i == length(all_dat)) rm(major_group_i, all_dat, i)
+}
+
+dat <- left_join(dat, strata_meta_dat) %>%
+  select(series_id, value, date, item_code, item_name,
+         display_level, area_code, base_period) %>%
+  group_by(series_id) %>% 
+  mutate(lag1 = value - lag(value))
+
+IDs <- unique(dat$series_id)
+for(i in 1:length(IDs)){
+  
+  if(i == 1){
+    corr_matr <- data.frame(nrow = length(IDs), ncol = 2)
+    colnames(corr_matr) <- c("series_id", "Cor")
+  }
+    groupA <- filter(dat, series_id == IDs[i])
+    groupB <- CPI
+    
+    date_intersect <- intersect(
+      interval(min(groupA$date), max(groupA$date)),
+      interval(min(groupB$date), max(groupB$date))
+    )
+    
+    groupA2 <- filter(groupA, date %within% date_intersect)
+    groupB2 <- filter(groupB, date %within% date_intersect)
+    
+    joined <- full_join(groupA2[,c("lag1", "date")], 
+                        groupB2[,c("lag1", "date")], 
+                        by = "date")
+    
+    corr_matr[i,1] <- IDs[i]
+    corr_matr[i,2] <- with(joined, 
+                           round(cor(lag1.x, lag1.y, use = "complete.obs"), 4)
+                           )
+    
+    if(i == length(IDs)){
+      rm(groupA, groupB, groupA2, groupB2, joined, date_intersect, i, IDs)
+    }
+  }
+corr_matr <- left_join(corr_matr, strata_meta_dat) %>%
+        select(item_name, series_id, Cor)
+
+top <- corr_matr %>% arrange(desc(Cor)) %>% .[1:25,] %>% .[,-2]
+top[21,1] <- "Club membership"
