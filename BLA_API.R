@@ -43,56 +43,6 @@ library(ggfortify)
 # https://download.bls.gov/pub/time.series/cu/
 # https://download.bls.gov/pub/time.series/ap/
 
-# e.g. ====
-dat <- httr::GET(
-  url = "https://download.bls.gov/pub/time.series/cu/cu.data.11.USFoodBeverage") 
-dat <- content(dat, "text")
-dat <- data.table::fread(dat)
-
-month_convert <- function(m){
-    if (m == "M01") {
-      return("January")
-    } else if (m == "M02") {
-      return("February")
-    } else if (m == "M03") {
-      return("March")
-    } else if (m == "M04") {
-      return("April")
-    } else if (m == "M05") {
-      return("May")
-    } else if (m == "M06") {
-      return("June")
-    } else if (m == "M07") {
-      return("July")
-    } else if (m == "M08") {
-      return("August")
-    } else if (m == "M09") {
-      return("September")
-    } else if (m == "M10") {
-      return("October")
-    } else if (m == "M11") {
-      return("November")
-    } else if (m == "M12") {
-      return("December")
-    } else {
-      return(m)
-    }
-}
-m <- c("M01", "M02", "M03", "M04", "M05", "M06", "M07", "M08", 
-       "M09", "M10", "M11", "M12")
-dat <- filter(dat, period %in% m) 
-
-dat <- mutate(dat, 
-              month = substring(period, 2),
-              date = ymd(paste0(year, month, "01"))
-              ) %>% select(series_id, date, value)
-
-dat2 <- filter(dat, series_id %in% unique(dat$series_id)[1:12])
-
-ggplot(data = dat2) + 
-  geom_line(aes(x = date, y = value)) + 
-  facet_wrap(~ series_id, scales = "free")
-
 # area_codes: cu.area  =====
 area_dat <- httr::GET(
   url = "https://download.bls.gov/pub/time.series/cu/cu.area") %>% 
@@ -121,13 +71,21 @@ meta_dat <- httr::GET(
   data.table::fread()
 
 # all-in-one series: cu.data.1.AllItems =================================
-# ALL_items/series; **NOT** 1_item/series
-all_in_one_dat <- httr::GET(
+# CPI ========
+m <- c("M01", "M02", "M03", "M04", "M05", "M06", "M07", "M08", 
+       "M09", "M10", "M11", "M12")
+
+CPI <- httr::GET(
   url = "https://download.bls.gov/pub/time.series/cu/cu.data.1.AllItems") %>% 
   content("text") %>% 
-  data.table::fread()
+  data.table::fread() %>%
+  filter(series_id == "CUUR0000SA0",
+         period %in% m) %>%
+  mutate(month = substring(period, 2), 
+         date = ymd(paste0(year, month, "01"))) %>%
+  select(series_id, date, value)
 
-# All category-item series: cu.data.xx.category =====================
+# Major Groups (list): cu.data.xx.category =====================
 # https://download.bls.gov/pub/time.series/cu/{...}
 end_points <- c("cu.data.1.AllItems", "cu.data.11.USFoodBeverage", 
                 "cu.data.12.USHousing", "cu.data.13.USApparel", 
@@ -145,7 +103,7 @@ for(i in 1:length(end_points)){
     data.table::fread() 
 }
 
-# "Major Group" df =================
+# Major Group meta-data =================
 # Major Group > Expenditure Class > Item Strata > Entry Level Item
 # Primary categories item codes
 major_group <- filter(item_dat, display_level == 0) %>% .[c(3,5:12),]
@@ -157,7 +115,7 @@ major_group_meta_data <- filter(meta_dat,
                                  seasonal == "U",
                                  periodicity_code == "R")
 
-# All "Major Group" dfs ======
+# Major Groups (df) ======
 m <- c("M01", "M02", "M03", "M04", "M05", "M06", "M07", "M08", 
        "M09", "M10", "M11", "M12")
 
@@ -177,47 +135,13 @@ for(i in 1:length(all_dat)){
 
 major_groups_dat <- left_join(major_groups_dat, item_dat)
 
-
 ggplot(data = all_major_groups) + 
   geom_line(aes(x = date, y = value)) + 
   facet_wrap(~ item_name)
 
 # ggsave("primaryCPIcats_notfree.jpg", height = 8, width = 8)
 
-# correlation test run ======
-# cor(Food & Beverage, Housing)
-unique(all_major_groups$item_name)
-Food_and_Bev <- filter(all_major_groups, item_name == "Food and beverages")
-Transportation <- filter(all_major_groups, item_name == "Transportation")
-
-date_intersect <- intersect(
-  interval(min(Transportation$date), max(Transportation$date)),
-  interval(min(Food_and_Bev$date), max(Food_and_Bev$date))
-        )
-
-Food_and_Bev2 <- filter(Food_and_Bev, date %within% date_intersect) %>%
-  mutate(lag1 = value - lag(value))
-Transportation2 <- filter(Transportation, date %within% date_intersect) %>%
-  mutate(lag1 = value - lag(value))
-
-cor(Food_and_Bev2$value, Transportation2$value)
-cor(Food_and_Bev2$lag1, Transportation2$lag1, use = "complete.obs")
-
-ggplot() + geom_point(aes(x = Food_and_Bev2$lag1, y = Transportation2$lag1))
-
-
-a <- autoplot(acf(Food_and_Bev2$lag1, na.action = na.pass, plot = FALSE)) + 
-  ggtitle("Autocorrelation: Food and Bev. Index Monthly Change") + 
-  theme(plot.title = element_text(hjust = 0.5))
-b <- autoplot(acf(Transportation2$lag1, na.action = na.pass, plot = FALSE)) +
-  ggtitle("Autocorrelation: Transportation Index Monthly Change") + 
-  theme(plot.title = element_text(hjust = 0.5))
-
-c <- grid.arrange(a, b)
-
-ggsave("FBandTrans_autocorr.jpg", plot = c, height = 4, width = 6)
-
-# "major group" correlation matrix =====
+# Major Group correlation matrix =====
 
 #     series_id                series_title
 # 1 CUUR0000SA0                   All items 
@@ -328,7 +252,7 @@ m <- c("M01", "M02", "M03", "M04", "M05", "M06", "M07", "M08",
        "M09", "M10", "M11", "M12")
 
 # Get data ==
-transportation_dat <- httr::GET(
+t_dat <- httr::GET(
   url = "https://download.bls.gov/pub/time.series/cu/cu.data.14.USTransportation") %>% 
   content("text") %>% 
   data.table::fread() %>%
@@ -342,9 +266,12 @@ meta_dat <- meta_dat %>%
   select(series_id, area_code, item_code, seasonal, 
          periodicity_code, base_period, series_title) 
 
-# Add meta-info to transportation data ==
-transportation_dat <- left_join(transportation_dat, 
-                                meta_dat, by = "series_id") %>%
+# df: CPI + transportation major group
+dat <- rbind.data.frame(CPI, t_dat)
+
+# meta-info for CPI + transportation ==
+dat <- 
+  left_join(dat, meta_dat, by = "series_id") %>%
   filter(area_code == "0000", seasonal == "U", periodicity_code == "R") %>%
   mutate(series_title = str_replace(series_title, " in U.S. city average, all urban consumers, not seasonally adjusted", "")) %>% 
   left_join(., item_dat[,-"item_name"])
@@ -358,15 +285,15 @@ table(tdat_levels$`mean(display_level)`)
 # 1  3  9 17 10
 
 # Filter to levels 0,1,2 and calculate lag1
-transportation_dat_012 <- transportation_dat %>% 
+dat_012 <- dat %>% 
   filter(display_level %in% c(0, 1, 2)) %>%
   group_by(series_id) %>%
   mutate(lag1value = value - lag(value)) # ** MONTH-TO-MONTH CHANGES **
 
 # Correlation matrix ==
-titles012 <- unique(transportation_dat_012$series_title)
+titles012 <- unique(dat_012$series_title)
 
-IDs <- unique(transportation_dat_012$series_id)
+IDs <- unique(dat_012$series_id)
 for(i in 1:length(IDs)){
   
   if(i==1) {
@@ -376,8 +303,8 @@ for(i in 1:length(IDs)){
 
   for(j in 1:length(IDs)){
     
-    groupA <- filter(transportation_dat_012, series_id == IDs[i])
-    groupB <- filter(transportation_dat_012, series_id == IDs[j])
+    groupA <- filter(dat_012, series_id == IDs[i])
+    groupB <- filter(dat_012, series_id == IDs[j])
     
     date_intersect <- intersect(
       interval(min(groupA$date), max(groupA$date)),
@@ -396,16 +323,34 @@ for(i in 1:length(IDs)){
   }
 }
 
-series_id_title <- transportation_dat_012 %>% 
+# check series_id and series_title match up
+series_id_title <- dat_012 %>% 
   group_by(series_id) %>% 
   summarise(d = unique(series_title))
 
 rownames(corr_matr) <- titles012
-cm <- round(corr_matr[-c(2, 3, 10), -c(2, 3, 10)], 3) # Bingo.
+corr_matr <- round(corr_matr[-c(3, 4, 11), -c(3, 4, 11)], 3) # Remove inbetween level
 
-colnames(cm) <- c("Tr", "MVs", "Fuel", "P&E", "M&R", "Ins", "Fees", "Air", "Inter", "Intra")
-cm
+colnames(corr_matr) <- c("All", "Tr", "MVs", "Fuel", "P&E", "M&R", "Ins", 
+                  "Fees", "Air", "Inter", "Intra")
+corr_matr
 
 ggplot(data = trans_dat_012) +
   geom_line(aes(x = date, y = value)) +
   facet_wrap(~ series_title, scales = "free")
+
+# Just CPI ======
+cpi <- all_dat[[1]]
+m <- c("M01", "M02", "M03", "M04", "M05", "M06", "M07", "M08", 
+       "M09", "M10", "M11", "M12")
+
+cpi <- cpi %>% 
+  filter(period %in% m,
+         series_id == "CUUR0000SA0") %>%
+  mutate(month = substring(period, 2), 
+         date = ymd(paste0(year, month, "01")),
+         item_code = substring(series_id, 9),
+         lag1value = value - lag(value)) %>%
+  select(series_id, value, date, item_code) %>% 
+  left_join(.,meta_dat) 
+
