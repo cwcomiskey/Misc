@@ -356,6 +356,7 @@ meta_dat <- left_join(meta_dat, item_dat) %>%
 
 strata_meta_dat <- left_join(strata, meta_dat); rm(strata, meta_dat)
 
+# All data df ==
 for(i in 1:length(all_dat)){
   if(i == 1) dat <- data.frame()
   
@@ -371,12 +372,14 @@ for(i in 1:length(all_dat)){
   if(i == length(all_dat)) rm(major_group_i, all_dat, i)
 }
 
+# Combine data and meta-data ==
 dat <- left_join(dat, strata_meta_dat) %>%
   select(series_id, value, date, item_code, item_name,
          display_level, area_code, base_period) %>%
   group_by(series_id) %>% 
   mutate(lag1 = value - lag(value))
 
+# Correlation matrix ==
 IDs <- unique(dat$series_id)
 for(i in 1:length(IDs)){
   
@@ -413,3 +416,45 @@ corr_matr <- left_join(corr_matr, strata_meta_dat) %>%
 
 top <- corr_matr %>% arrange(desc(Cor)) %>% .[1:25,] %>% .[,-2]
 top[21,1] <- "Club membership"
+
+# df: [rows] x [columns] = [date] x [top-25] ======
+# Columns: Date, CPI, "Food at home", "Alcohol", ...
+# Algorithm
+# (1) df <- Date, CPI
+# (2) df <- join(df, [date, "Food at home"]) --- (retain all dates)
+# (3) df <- join(df, [date, "Alcohol"])
+# (4) ...
+corr_matr <- corr_matr %>% arrange(desc(Cor))
+
+for(i in 1:25){
+  if(i == 1) {
+    reg_dat <- CPI %>% select(date, lag1) 
+    names(reg_dat) <- c("date", "CPI")
+  }
+  
+  strata_i <- dat %>% 
+    filter(series_id == corr_matr[i,"series_id"]) %>%
+    select(lag1, date)
+    
+  reg_dat <- full_join(reg_dat, strata_i, by = "date") 
+  reg_dat <- within(reg_dat, rm(series_id))
+  names(reg_dat)[names(reg_dat) == 'lag1'] <- substring(corr_matr[i,"series_id"], 9)
+  
+  if(i == 25) rm(strata_i)
+}
+
+lin_reg <- lm(CPI ~ ., data = select(reg_dat, -date))
+
+s <- summary(lin_reg)
+lin_reg <- lm(CPI ~ SETB + SEHB + SAH21 + SETG01 + SEFV + SAF11 +
+                SEAC + SEAA + SEMC + SEHA + SEMF - 1, data = reg_dat)
+s <- summary(lin_reg)
+summary(lin_reg)
+residuals(lin_reg)
+
+ggplot() + 
+  geom_point(aes(x = fitted(lin_reg), y = residuals.lm(lin_reg))) +
+  xlab("Fitted Values") + ylab("Residuals")
+
+autoplot(lin_reg)[1:2]
+                      
