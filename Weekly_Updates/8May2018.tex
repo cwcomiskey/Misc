@@ -1,0 +1,98 @@
+\documentclass{article}
+
+\title{Macroeconomic Models: \\ Weekly Update}
+\author{Chris Comiskey, Open Data Group}
+\date{\today}
+
+\usepackage{natbib}
+\bibliographystyle{unsrtnat}
+
+\usepackage{fullpage}
+\usepackage{ulem}
+
+\usepackage{amsmath, amsthm, amssymb, amsfonts}
+\usepackage{mathtools}
+\usepackage{float}
+\usepackage{bbm}
+
+\usepackage{listings}
+
+
+\begin{document}
+
+\maketitle{}
+
+\begin{itemize}
+\item Pretty easy to see the {\bf strong} seasonality in the ACF of CPI's month-to-month changes.
+  \begin{figure}[H]
+  \centering
+  \includegraphics[scale=.15]{/Users/cwcomiskey/Desktop/ODG/Macro-models/plots/CPImtmACF.jpg}
+  \end{figure}
+\item Linear regression model residuals:
+      \begin{figure}[H]
+      \centering
+      \includegraphics[scale=.12]{/Users/cwcomiskey/Desktop/ODG/Macro-models/plots/ModelResiduals.jpg}
+      \end{figure}
+\item Model residuals: empirical autocorrelation function (ACF) plot.
+      \begin{figure}[H]
+      \centering
+      \includegraphics[scale=.12]{/Users/cwcomiskey/Desktop/ODG/Macro-models/plots/ModResidACF.jpg}
+      \end{figure}
+\item Model residuals: empirical partial autocorrelation function (ACF) plot.
+      \begin{figure}[H]
+      \centering
+      \includegraphics[scale=.12]{/Users/cwcomiskey/Desktop/ODG/Macro-models/plots/ModResidPACF.jpg}
+      \end{figure}
+\item \verb|auto.arima()| ranks a simple AR(1) as the top SARMIA model for the residuals. I modeled the linear regression residuals as AR(1), and the following plot shows the ACF for the (new) resulting residuals.
+      \begin{figure}[H]
+      \centering
+      \includegraphics[scale=.15]{/Users/cwcomiskey/Desktop/ODG/Macro-models/plots/Mod+AR1Resid.jpg}
+      \end{figure}
+\item HOWEVER... dividing the data into training and testing subsets gives a different result; the training set residuals do not show enough autocorrelation to justify modeling them as AR(1).
+\item Last month's CPI change is not a sifnificant predictor of this month's CPI change; see last row, starred for visibility:
+\begin{verbatim}
+lm(formula = CPI ~ ., data = select(reg_dat, -date))
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  0.0405137  0.0435696   0.930 0.355550    
+SETB         0.0423077  0.0009428  44.877  < 2e-16 
+SEHB         0.0196479  0.0036115   5.440 6.96e-07
+.
+.
+.
+SEHJ         0.0258326  0.0180102   1.434 0.155806    
+last_month   0.0026682  0.0196039   0.136 0.892119 (****)
+---
+
+Residual standard error: 0.09496 on 72 degrees of freedom
+Multiple R-squared:  0.9866,	Adjusted R-squared:  0.9817 
+F-statistic: 203.1 on 26 and 72 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+\item The same is true of the CPI change 12 months before.
+\begin{verbatim}
+lm(formula = CPI ~ ., data = select(reg_dat, -date))
+
+Coefficients:
+              Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  0.0450185  0.0424584   1.060 0.292554    
+SETB         0.0423946  0.0009511  44.574  < 2e-16 
+SEHB         0.0199526  0.0036733   5.432 7.20e-07
+.
+.
+.
+SEHJ         0.0257108  0.0178891   1.437 0.154984    
+lag12_delta -0.0062173  0.0197272  -0.315 0.753550 (****)
+---
+
+Residual standard error: 0.09491 on 72 degrees of freedom
+Multiple R-squared:  0.9866,	Adjusted R-squared:  0.9817 
+F-statistic: 203.4 on 26 and 72 DF,  p-value: < 2.2e-16
+\end{verbatim}
+\end{itemize}
+\section*{Relative Importance Weights}
+\begin{itemize}
+\item https://www.bls.gov/cpi/tables/relative-importance/home.htm
+\end{itemize}
+\end{document}
