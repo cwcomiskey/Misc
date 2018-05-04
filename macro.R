@@ -5,28 +5,19 @@ macro::depends() # load all dependencies
 # Linear regression: lm(CPI ~ Top25, ...) =======
 
 lin_reg <- lm(CPI ~ ., data = select(reg_dat, -date))
+summary(lin_reg) # R^2:  0.9865
 
-summary(lin_reg)
-lin_reg <- lm(CPI ~ SETB + SEHB + SAH21 + SETG01 + SEFV + SAF11 +
-                SEAC + SEAA + SEMC + SEHA + SEMF - 1, data = reg_dat)
-summary(lin_reg)
-names(summary(lin_reg))
-summary(lin_reg)
+sum_na <- function(x) sum(as.numeric(is.na(x)))
+apply(reg_dat, FUN = sum_na, MARGIN = 2) # NAs by column; a lot
+
 ggplot() + geom_line(aes(x = residuals(lin_reg)))
 
-# ID hunting ==
-IDs <- c("SETB", "SEHB", "SAH21", "SETG01", "SEFV", "SAF11",
-         "SEAC", "SEAA", "SEMC", "SEHA", "SEMF")
-keepers <- corr_matr %>% filter(substring(series_id, 9) %in% IDs)
-corr_matr <- corr_matr %>% mutate(keeper = as.numeric(substring(series_id, 9) %in% IDs))
-# ============= %
-reg_dat <- reg_dat %>% mutate(lm_change = lag(CPI, n = 12)) # last month's change
+# previous monthly changes (lag 1, 12) as covariates
+reg_dat <- reg_dat %>% mutate(last_month = lag(CPI, n = 1)) # last month's change
 lin_reg <- lm(CPI ~ ., data = select(reg_dat, -date))
 summary(lin_reg)
 # --> last month's change is not a significant predictor
 # --> 12 months ago change is not a significant predictor
-
-
 
 # Formatting for plotting regression results ======
 # Add fitted values to reg_dat for plotting by date ==
@@ -136,3 +127,33 @@ preds <- predict(lin_reg, newxreg = select(d_test, -CPI))$pred
 1- sum( (preds - d_test$CPI)^2) / sum( (d_test$CPI - mean(d_test$CPI))^2 ) # 0.9368632
 
 
+
+# arima(...) -- random selection cross validation ====
+# CPI *calculation* using RIWs ======
+
+# Create RIW df ====== #
+# riws <- read_table("riws") %>%
+#   drop_na() %>%
+#   mutate(`Item and group` = gsub("\\.*", "" , riws$`Item and group`))
+
+strata_riws <- riws %>% filter(`Item and group` %in% strata_dat$item_name)
+names(strata_riws) <- c("item_name", "CPI-U", "CPI-W")
+strata_riws <- left_join(strata_riws, item_dat)
+# devtools::use_data(strata_riws, overwrite = TRUE)
+# ===================== #
+
+# Match: "reg_dat" columns to "strata_riws" rows, for matrix mult ==== #
+
+# strata_riws$item_code %in% names(reg_dat)
+# names(reg_dat) %in% strata_riws$item_code)
+
+top25_strata_riws <- strata_riws %>% filter(item_code %in% names(reg_dat)) 
+# reg_dat <- select(reg_dat, -SERF01)
+
+top25_strata_riws <- top25_strata_riws[match(
+  names(reg_dat)[-c(1,2)], 
+  top25_strata_riws$item_code
+  ),
+  ] # to make row order match reg_dat column order, for matrix mult
+
+# SUCCESS. Now matrix multiplication: (strata %*% RIWs) / sum(RIW) = CPI --> 

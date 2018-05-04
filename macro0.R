@@ -392,7 +392,7 @@ for(i in 1:length(IDs)){
       rm(groupA, groupB, groupA2, groupB2, joined, date_intersect, i, IDs)
     }
   }
-corr_matr <- left_join(corr_matr, strata_meta_dat) %>%
+corr_matr <- left_join(corr_matr, strata_dat) %>%
         select(item_name, series_id, Cor)
 
 top25 <- corr_matr %>% arrange(desc(Cor)) %>% .[1:25,] %>% .[,-2]
