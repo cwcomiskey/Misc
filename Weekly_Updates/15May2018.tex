@@ -1,0 +1,45 @@
+\documentclass{article}
+
+\title{Macroeconomic Models: \\ Weekly Update}
+\author{Chris Comiskey, Open Data Group}
+\date{\today}
+
+\usepackage{natbib}
+\bibliographystyle{unsrtnat}
+
+\usepackage{fullpage}
+\usepackage{ulem}
+
+\usepackage{amsmath, amsthm, amssymb, amsfonts}
+\usepackage{mathtools}
+\usepackage{float}
+\usepackage{bbm}
+
+\usepackage{listings}
+
+
+\begin{document}
+
+\maketitle{}
+\begin{figure}[H]
+\centering
+\includegraphics[scale=.15]{/Users/cwcomiskey/Desktop/ODG/Macro-models/plots/all.jpg}
+\end{figure}
+\begin{itemize}
+\item The red line is the CPI.
+
+\item The green Lin\_Reg line is the linear regression fitted line.
+
+\item The dirty green $\text{RIW}_{25}$ line is calculated: 
+$$ \widehat{\text{CPI}}_{t} = \frac{\sum_{i=1}^{25} \left( \text{RIW}_{i}\times \text{Strata}_{i,t} \right) }{\sum_{i} \text{RIW}_{i}} $$
+
+\item The blue line, $\text{RIW}_{70}$:
+$$ \widehat{\text{CPI}}_{t} = \frac{\sum_{i=1}^{70} \left( \text{RIW}_{i}\times \text{Strata}_{i,t} \right) }{\sum_{i} \text{RIW}_{i}} $$
+
+\item The purple line, $\text{RIW}_{70}^{*}$:
+$$ \widehat{\text{CPI}}_{t} = \frac{\sum_{i=1}^{70} \left( \text{RIW}_{i}\times \text{Strata}_{i,t} \right) }{\sum_{i} \text{RIW}_{i}} - 20.9$$
+where 20.9 is the difference in the mean of ``$\text{RIW}_{70}$'' and the CPI. For this line, $\text{R}^{2} \approx 0.69$)
+\item Calculating the equivalent ``$\text{RIW}_{25}^{*}$'' gives an $R^{2}$ of approximately 0.93.
+\end{itemize}
+
+\end{document}
