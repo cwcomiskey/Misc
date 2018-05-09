@@ -128,7 +128,7 @@ preds <- predict(lin_reg, newxreg = select(d_test, -CPI))$pred
 
 
 
-# CPI-change ~= top25 %*% RIWs ======
+# CPI-change ~= top25 %*% RIWs (incomplete) ======
 
 # Create RIW df ====== #
 # riws <- read_table("riws") %>%
@@ -156,10 +156,6 @@ riws25 <- riws25[match(
   ),
   ] # to make row order match reg_dat column order, for matrix mult
 
-# matrix multiplication: (strata %*% RIWs) / sum(RIW) = CPI
-reg_dat_mat <- as.matrix(reg_dat)
-riws25_CPIU <- as.matrix(riws25[,2])
-w_avg <- reg_dat_mat %*% riws25_CPIU / sum(riws25_CPIU) # Est. CPI change
 
 
 CPI <- data.frame(reg_dat[,c("date", "CPI")], "CPI") 
@@ -176,16 +172,14 @@ ggplot(data = plot_dat) +
   geom_line(aes(x = date, y = value, color = cat), size = 1.25)
 ggsave("CPI_RIWs_LinReg.jpg", width = 12, height = 5)
 
-# R^2, [1] -15.63509
-1- sum( (w_avg - CPI$value)^2) / sum( (CPI$value - mean(CPI$value))^2 )
 
 
-# (0) lm(CPI ~ ., data = top25) ==============================
+# lm(...), f_25, f_71 =====================================
+# (0) lm(CPI ~ ., data = top25) 
 # (1) CPI = f(25 strata, 25 RIW) 
-# (2) CPI = f(71 strata, 71 RIW) 
 
 riws25 <- strata_riws %>% filter(item_code %in% names(reg_dat)) 
-strata_dat25 <- strata_dat %>% 
+strata25 <- strata_dat %>% 
   filter(item_code %in% riws25$item_code)
 
 # Create proper df for regression ========= %
@@ -195,7 +189,7 @@ for(i in 1:24){
     names(strata_reg_dat) <- c("date", "CPI")
   }
   
-  strata_i <- strata_dat25 %>% 
+  strata_i <- strata25 %>% 
     filter(item_code == riws25[i,"item_code"]) %>%
     select(value, date)
   
@@ -203,81 +197,66 @@ for(i in 1:24){
   strata_reg_dat <- within(strata_reg_dat, rm(series_id))
   names(strata_reg_dat)[names(strata_reg_dat) == 'value'] <- paste(riws25[i,"item_code"])
   
-  if(i == 24) rm(strata_i, i)
+  if(i == 24) {
+    rm(strata_i, i)
+    strata_reg_dat <- drop_na(strata_reg_dat)
+    }
 }
-
-sum_na <- function(x) sum(as.numeric(is.na(x)))
-apply(strata_reg_dat, FUN = sum_na, MARGIN = 2) # NAs by column; a lot
 
 # Regression ========= %
 lin_reg <- lm(CPI ~ ., data = select(strata_reg_dat, -date))
 
 # Top 25 RIW calculation ========= %
-strata_reg_dat <- drop_na(strata_reg_dat)
 
 riws25 <- riws25[match(
   names(strata_reg_dat)[-c(1,2)], 
   riws25$item_code),] 
 
-# matrix multiplication: (strata %*% RIWs) / sum(RIW) = CPI
-strata_reg_dat_mat <- as.matrix(strata_reg_dat[-c(1,2)])
-riws25_CPIU <- as.matrix(riws25[,2])
-w_avg <- strata_reg_dat_mat %*% riws25_CPIU / sum(riws25_CPIU) # Est. CPI 
-rm(strata_reg_dat_mat, riws25_CPIU)
+riws <- as.vector(t(riws25[,2]))
+CPI <- as.vector(strata_reg_dat[,2])
+strata <- strata_reg_dat %>% select(-date, -CPI)
 
-
-# All RIWs ========= %
-
-for(i in 1:dim(strata_riws)[1]){
-  if(i == 1) {
-    strata70_reg_dat <- CPI %>% select(date, value) 
-    names(strata70_reg_dat) <- c("date", "CPI")
-  }
-  
-  strata_i <- strata_dat %>% 
-    filter(item_code == strata_riws[i,"item_code"]) %>%
-    select(value, date)
-  
-  strata70_reg_dat <- full_join(strata70_reg_dat, strata_i, by = "date") 
-  strata70_reg_dat <- within(strata70_reg_dat, rm(series_id))
-  names(strata70_reg_dat)[names(strata70_reg_dat) == 'value'] <- 
-    paste(strata_riws[i,"item_code"])
-  
-  if(i == dim(strata_riws)[1]) rm(strata_i, i)
+for(i in 2:100){
+  if(i ==2) CPI.hat25 <- CPI[1]
+  CPI.hat25[i] <- CPI[i-1]*(sum(riws*(strata[i,]/strata[i-1,]))/sum(riws))
+  if(i == 100) rm(i)
 }
 
+# COME BACK TO THIS
+1- sum( (CPI.hat25 - strata_reg_dat$CPI)^2) / sum( (strata_reg_dat$CPI - mean(strata_reg_dat$CPI))^2 )
+
+# Calculate CPI from 70 RIWs ================= 
+
 strata_riws_ordered <- strata_riws[match(
-  names(strata70_reg_dat)[-c(1,2)], 
-  strata_riws$item_code),] 
+  names(strata70_reg_dat)[-c(1,2)],
+  strata_riws$item_code),]
 
-strata_reg_dat 
+riws <- as.vector(t(strata_riws_ordered[,2])); rm(strata_riws_ordered)
+# CPI <- as.vector(strata70_reg_dat[,2])
+strata <- strata70_reg_dat %>% select(-date, -CPI)
 
-sum_na <- function(x) sum(as.numeric(is.na(x)))
-summary(apply(strata70_reg_dat, FUN = sum_na, MARGIN = 2)) 
+for(i in 2:100){
+  if(i ==2) CPI.hat <- CPI[1]
+  CPI.hat[i] <- CPI[i-1]*(sum(riws*(strata[i,]/strata[i-1,])))/100
+}
 
-strata70_reg_dat <- drop_na(strata70_reg_dat)
+1- sum( (CPI.hat - strata_reg_dat$CPI)^2) / sum( (strata_reg_dat$CPI - mean(strata_reg_dat$CPI))^2 )
 
-# matrix multiplication
-strata70_reg_dat_mat <- as.matrix(strata70_reg_dat[-c(1,2)])
-strata70_riws_CPIU <- as.matrix(strata_riws_ordered[,2])
-w70_avg <- (strata70_reg_dat_mat %*% strata70_riws_CPIU) / sum(strata70_riws_CPIU) # Est. CPI 
-
-# Plot ========= #
+# Plot ============== #
 
 CPI <- data.frame(strata_reg_dat[,c("date", "CPI")], "CPI") 
 colnames(CPI) <- c("date", "value", "cat")
-calc <- data.frame(strata_reg_dat[,c("date")], w_avg, "RIW_25")
+calc <- data.frame(strata_reg_dat[,c("date")], CPI.hat25, "RIW25")
 colnames(calc) <- c("date", "value", "cat")
 l_reg <- data.frame(strata_reg_dat[,c("date")], lin_reg$fitted.values, "Lin_Reg")
 colnames(l_reg) <- c("date", "value", "cat")
-calc70 <- data.frame(strata_reg_dat[,c("date")], w70_avg, "RIW_70")
+calc70 <- data.frame(strata70_reg_dat[,c("date")], CPI.hat, "RIW70")
 colnames(calc70) <- c("date", "value", "cat")
-calc2 <- data.frame(strata_reg_dat[,c("date")], w70_avg - 20.9, "RIW_70*")
-colnames(calc2) <- c("date", "value", "cat")
-plot_dat <- rbind.data.frame(CPI, calc, l_reg, calc70, calc2); rm(CPI, calc, l_reg, calc2, calc70)
+
+plot_dat <- rbind.data.frame(CPI, calc, l_reg, calc70); rm(CPI, calc70)
 
 ggplot(data = plot_dat) +
   geom_line(aes(x = date, y = value, color = cat), size = 1.75)
-ggsave("all.jpg", width = 12, height = 5)
 
-1- sum( ((w70_avg - 20.9) - strata_reg_dat$CPI)^2) / sum( (strata_reg_dat$CPI - mean(strata_reg_dat$CPI))^2 )
+# ggsave("All.jpg", width = 12, height = 5)
+
