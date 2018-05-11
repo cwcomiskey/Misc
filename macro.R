@@ -175,8 +175,8 @@ ggsave("CPI_RIWs_LinReg.jpg", width = 12, height = 5)
 
 
 # lm(...), f_25, f_71 =====================================
-# (0) lm(CPI ~ ., data = top25) 
-# (1) CPI = f(25 strata, 25 RIW) 
+# Note: 2015 - 2016 weights
+# https://www.bls.gov/cpi/tables/relative-importance/home.htm
 
 riws25 <- strata_riws %>% filter(item_code %in% names(reg_dat)) 
 strata25 <- strata_dat %>% 
@@ -222,10 +222,9 @@ for(i in 2:100){
   if(i == 100) rm(i)
 }
 
-# COME BACK TO THIS
 1- sum( (CPI.hat25 - strata_reg_dat$CPI)^2) / sum( (strata_reg_dat$CPI - mean(strata_reg_dat$CPI))^2 )
 
-# Calculate CPI from 70 RIWs ================= 
+# CPI from 70 RIWs ================= #
 
 strata_riws_ordered <- strata_riws[match(
   names(strata70_reg_dat)[-c(1,2)],
@@ -260,3 +259,46 @@ ggplot(data = plot_dat) +
 
 # ggsave("All.jpg", width = 12, height = 5)
 
+# Changes plot ===========
+
+CPI <- data.frame(strata_reg_dat$`date`[-1],  diff(strata_reg_dat$`CPI`), "CPI") 
+colnames(CPI) <- c("date", "value", "cat")
+calc <- data.frame(strata_reg_dat$`date`[-1], diff(CPI.hat25), "RIW25")
+colnames(calc) <- c("date", "value", "cat")
+l_reg <- data.frame(strata_reg_dat$`date`[-1], diff(lin_reg$fitted.values), "Lin_Reg")
+colnames(l_reg) <- c("date", "value", "cat")
+calc70 <- data.frame(strata_reg_dat$`date`[-1], diff(CPI.hat), "RIW70")
+colnames(calc70) <- c("date", "value", "cat")
+
+plot_dat2 <- rbind.data.frame(CPI, calc, l_reg, calc70); rm(CPI, calc, l_reg, calc70)
+
+ggplot(data = plot_dat2) +
+  geom_line(aes(x = date, y = value, color = cat), size = 1.75) + 
+  ggtitle("Month-to-month Changes") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# ggsave("All_changes.jpg", width = 12, height = 5)
+
+1- sum( (diff(CPI.hat) - diff(strata_reg_dat$`CPI`))^2) / sum( (diff(strata_reg_dat$`CPI`) - mean(diff(strata_reg_dat$`CPI`)))^2 )
+# RIW25 = -0.2146562
+# LinReg = 0.9744422
+# RIW70 = 0.9445965
+
+# 2010 CPI =======================
+# Create RIW df ====== #
+riws2009 <- read_table("2009RIWs_0708wts") %>%
+  drop_na() %>%
+  mutate(Item_name = gsub("\\.*", "" , `Expenditure category`)) %>% 
+  select(Item_name, CPI_U = X2) %>%
+  left_join(., item_dat, by = c("Item_name" = "item_name")) %>% 
+  # ...riws2009 has **Not sure** and item_dat has "Recorded music and music subscriptions"
+  filter(display_level == 2 | Item_name %in% c("Airline fare", "Cable and satellite television and radio service")) %>%  
+  mutate(RIW_norm = CPI_U/sum(CPI_U) * 100)
+
+100 - sum(riws2009$CPI_U) # [1] 99.362
+
+t <- strata70_reg_dat[1:2,];
+missing <- names(t)[!(names(t) %in% riws2009$item_code)][3:5]
+missing.names <- unique(filter(strata_dat, item_code %in% missing)[,"item_name"])
+
+miss <- filter(riws2009, item_code %in% missing)
