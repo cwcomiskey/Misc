@@ -21,15 +21,63 @@
 \begin{document}
 
 \maketitle{}
-\begin{figure}[H]
-\centering
-\includegraphics[scale=.15]{/Users/cwcomiskey/Desktop/ODG/Macro-models/plots/All.jpg}
-\end{figure}
+    \begin{figure}[H]
+    \centering
+    \includegraphics[scale=.125]{/Users/cwcomiskey/Desktop/ODG/Macro-models/plots/All.jpg}
+    \end{figure}
 \begin{itemize}
-\item The regression line only does slightly better than the RIW25 line, so arguably there's no reason to use the regression equation when overfitting is a concern.
 \item $\text{R}^{2}_{25} = 0.9937$
 \item $\text{R}^{2}_{70} = 0.9997$
 \item $\text{R}^{2}_{\text{LinReg}} = 0.9998$
+\end{itemize}
+
+\begin{itemize}
+\item The distinct lines are easier to see on a plot of month-to-month differences.
+\end{itemize}
+    \begin{figure}[H]
+    \centering
+    \includegraphics[scale=.125]{/Users/cwcomiskey/Desktop/ODG/Macro-models/plots/All_changes.jpg}
+    \end{figure}
+\begin{itemize}
+\item $\text{R}^{2}_{25} = -0.21$
+\item $\text{R}^{2}_{70} = 0.97$
+\item $\text{R}^{2}_{\text{LinReg}} = 0.94$
+\item This indicates that the changing weights account for this lost $\approx 6\%$ variation.
+\item Relative expenditure weights change as prices change!! Consider a basket of two items: 
+\begin{itemize}
+\item Month 1
+    \begin{itemize}
+    \item Prices \\
+    Item A: \$30 \\
+    Item B: \$70 \\
+    \item Relative importance weights \\
+    Item A: 30\% \\
+    Item B: 70\%
+    \end{itemize}
+\item Month 2
+    \begin{itemize}
+    \item Prices \\
+    Item A: \$35 \\
+    Item B: \$70
+    \item NEW relative importance weights \\
+    Item A: 100*(35/105) = 33.33\% \\
+    Item B: 100*(70/105) = 66.67\%
+    \end{itemize}
+\end{itemize}
+\item Key formulas, for strata $i$ and time $t$:
+$$ \text{CPI}_{t} = \text{CPI}_{t-1} \left(
+  \sum_{i} \left[
+    \text{RIW}_{i,t-1} \left(
+      \frac{\text{Strata}_{i,t}}{\text{Strata}_{i,t-1}}
+    \right)
+  \right]
+\right) $$
+
+$$ \text{RIW}_{t, \text{U}} = \text{RIW}_{t-1} \left(
+  \frac{\text{Strata}_{t}}{\text{Strata}_{t-1}}
+  \right) \text{ then normalize... } \frac{\text{RIW}_{t, \text{N}}}{100} = \frac{\text{RIW}_{t, \text{U}}}{\text{CPI}_{t}/\text{CPI}_{t-1} \times 100}$$
+  
+
 \end{itemize}
 
 
