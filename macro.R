@@ -284,21 +284,90 @@ ggplot(data = plot_dat2) +
 # LinReg = 0.9744422
 # RIW70 = 0.9445965
 
-# 2010 CPI =======================
+# 2010 CPI =================================================
 # Create RIW df ====== #
+load2009riws <- function(){
 riws2009 <- read_table("2009RIWs_0708wts") %>%
   drop_na() %>%
   mutate(Item_name = gsub("\\.*", "" , `Expenditure category`)) %>% 
   select(Item_name, CPI_U = X2) %>%
   left_join(., item_dat, by = c("Item_name" = "item_name")) %>% 
-  # ...riws2009 has **Not sure** and item_dat has "Recorded music and music subscriptions"
-  filter(display_level == 2 | Item_name %in% c("Airline fare", "Cable and satellite television and radio service")) %>%  
-  mutate(RIW_norm = CPI_U/sum(CPI_U) * 100)
+  # ...riws2009 has __(not sure)__ and item_dat == "Recorded music and music subscriptions"
+  filter(display_level == 2 | 
+           Item_name %in% c("Airline fare", "Cable and satellite television and radio service")) 
+  # mutate(RIW_norm = CPI_U/sum(CPI_U) * 100)
 
-100 - sum(riws2009$CPI_U) # [1] 99.362
+  # Correct and add
+  riws2009[riws2009$Item_name == "Airline fare", c("Item_name", "item_code")] <- c("Airline fares", "SETG01")
+  riws2009[riws2009$Item_name == "Cable and satellite television and radio service", c("Item_name", "item_code")] <- c("Cable and satellite television service", "SERA02")
+  riws2009[68,] <- NA 
+  riws2009[68,1] <- "Recorded music and music subscriptions"
+  riws2009[68,2] <- 0.638
+  riws2009[68,3] <- "SERA06"                 
+  riws2009[68,4] <- 2
+  
+  return(riws2009)
+  
+  # Diagnostics
+  # missing <- names(strata70_reg_dat)[!(names(strata70_reg_dat) %in% riws2009$item_code)]
+  # item_dat[item_dat$item_code %in% missing,]
+  # unique(filter(strata_dat, item_code %in% missing)[,"item_name"])
+  }
+# riws2009 <- load2009riws()
+data("riws2009"); head(riws2009)
+data("strata70_reg_dat"); head(strata70_reg_dat)
 
-t <- strata70_reg_dat[1:2,];
-missing <- names(t)[!(names(t) %in% riws2009$item_code)][3:5]
-missing.names <- unique(filter(strata_dat, item_code %in% missing)[,"item_name"])
+sum(riws2009$CPI_U) 
 
-miss <- filter(riws2009, item_code %in% missing)
+riws2009 <- riws2009[match(
+  names(strata70_reg_dat)[-c(1,2)], 
+  riws2009$item_code),]
+
+# Calculate January 2010 weights ============ #
+# (1) Dec 2009 RIWs: riws2009
+D09w <- as.data.frame(t(riws2009[,"CPI_U"]))
+  colnames(D09w) <- colnames(D09)
+
+# (2) Dec2009/Jan2010 subindices and CPI: strata70_reg_dat
+D09 <- strata70_reg_dat[1,3:70]
+J10 <- strata70_reg_dat[2,3:70]
+
+strata70_reg_dat$CPI[1] * sum(J10/D09 * D09w)/100
+
+weights <- D09w * (J10/D09)
+
+# Try to automate it ====== #
+riws2009 <- riws2009[match(
+  names(strata70_reg_dat)[-c(1,2)], 
+  riws2009$item_code),]
+
+weights <- as.data.frame(t(riws2009[,"CPI_U"])) # To store calculated weights
+colnames(weights) <- riws2009$item_code
+s70 <- strata70_reg_dat[,-c(1,2)] # strata indices
+cpi.hat <- data.frame(index = strata70_reg_dat$CPI[1]) # CPI estimates
+CPI <- data.frame(index = strata70_reg_dat$CPI) # CPI
+rm(riws2009)
+
+for(m in 2:100){
+  if(year(strata70_reg_dat$date[m]) > 2011){break}
+  cpi.hat[m,1] <- CPI[m-1,1] * sum( (s70[m,] / s70[m-1,]) * weights[m-1,])/100
+  weights[m,] <- weights[m-1,] * (s70[m,] / s70[m-1,]) * (CPI[m-1,1] / CPI[m,1])
+  if(m == 100) rm(m)
+}
+
+summary(cpi.hat - CPI[1:25,1])
+
+CPIs <- data.frame(strata70_reg_dat$date[2:25],  diff(cpi.hat$index), "CPI_hat") 
+colnames(CPIs) <- c("date", "value", "Cat")
+CPI.hats <- data.frame(strata70_reg_dat$date[2:25], diff(CPI$index[1:25]), "CPI")
+colnames(CPI.hats) <- c("date", "value", "Cat")
+
+plot_dat <- rbind.data.frame(CPIs, CPI.hats)
+
+
+ggplot(data = plot_dat) + 
+  geom_line(aes(x = date, y = value, color = Cat), size = 1.5) + 
+  ggtitle("CPI Month-to-month Change Estimates with Calculated Weights") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+# ggsave("Weights.jpg", width = 12, height = 5)
