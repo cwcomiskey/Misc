@@ -21,6 +21,8 @@
 \begin{document}
 
 \maketitle{}
+It was a week of incremental improvements...
+\section*{Corrected CPI Calculations}
     \begin{figure}[H]
     \centering
     \includegraphics[scale=.125]{/Users/cwcomiskey/Desktop/ODG/Macro-models/plots/All.jpg}
@@ -40,10 +42,13 @@
     \end{figure}
 \begin{itemize}
 \item $\text{R}^{2}_{25} = -0.21$
-\item $\text{R}^{2}_{70} = 0.97$
-\item $\text{R}^{2}_{\text{LinReg}} = 0.94$
+\item $\text{R}^{2}_{70} = 0.94$
+\item $\text{R}^{2}_{\text{LinReg}} = 0.97$
 \item This indicates that the changing weights account for this lost $\approx 6\%$ variation.
-\item Relative expenditure weights change as prices change!! Consider a basket of two items: 
+\end{itemize}
+\section*{Corrected Relative Importance Weights}
+\begin{itemize}
+\item Relative expenditure weights change as prices change. Consider a simplified basket of two items: 
 \begin{itemize}
 \item Month 1
     \begin{itemize}
@@ -76,7 +81,12 @@ $$ \text{CPI}_{t} = \text{CPI}_{t-1} \left(
 $$ \text{RIW}_{t, \text{U}} = \text{RIW}_{t-1} \left(
   \frac{\text{Strata}_{t}}{\text{Strata}_{t-1}}
   \right) \text{ then normalize... } \frac{\text{RIW}_{t, \text{N}}}{100} = \frac{\text{RIW}_{t, \text{U}}}{\text{CPI}_{t}/\text{CPI}_{t-1} \times 100}$$
-  
+
+\item I calculated the 2010 - 2011 weights by hand---with the December 2009 published weights---and calculated the CPI with those weights and all 68 strata subindices.
+    \begin{figure}[H]
+    \centering
+    \includegraphics[scale=.125]{/Users/cwcomiskey/Desktop/ODG/Macro-models/plots/Weights.jpg}
+    \end{figure}
 
 \end{itemize}
 
