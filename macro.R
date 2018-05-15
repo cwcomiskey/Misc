@@ -324,50 +324,63 @@ riws2009 <- riws2009[match(
   riws2009$item_code),]
 
 # Calculate January 2010 weights ============ #
-# (1) Dec 2009 RIWs: riws2009
-D09w <- as.data.frame(t(riws2009[,"CPI_U"]))
-  colnames(D09w) <- colnames(D09)
-
-# (2) Dec2009/Jan2010 subindices and CPI: strata70_reg_dat
-D09 <- strata70_reg_dat[1,3:70]
-J10 <- strata70_reg_dat[2,3:70]
-
-strata70_reg_dat$CPI[1] * sum(J10/D09 * D09w)/100
-
-weights <- D09w * (J10/D09)
+# # (1) Dec 2009 RIWs: riws2009
+# D09w <- as.data.frame(t(riws2009[,"CPI_U"]))
+#   
+# # (2) Dec2009/Jan2010 subindices and CPI: strata70_reg_dat
+# D09 <- strata70_reg_dat[1,3:70]
+#   colnames(D09w) <- colnames(D09)
+# J10 <- strata70_reg_dat[2,3:70]
+# 
+# weights <- D09w * (J10/D09) # Jan'10 weights
 
 # Try to automate it ====== #
 riws2009 <- riws2009[match(
   names(strata70_reg_dat)[-c(1,2)], 
   riws2009$item_code),]
 
-weights <- as.data.frame(t(riws2009[,"CPI_U"])) # To store calculated weights
-colnames(weights) <- riws2009$item_code
-s70 <- strata70_reg_dat[,-c(1,2)] # strata indices
-cpi.hat <- data.frame(index = strata70_reg_dat$CPI[1]) # CPI estimates
+s70 <- strata70_reg_dat[,-c(1,2)] # shorter name!
+cpi.hat <- data.frame(index = strata70_reg_dat$CPI[1]) # initialize CPI estimate cont.
 CPI <- data.frame(index = strata70_reg_dat$CPI) # CPI
 rm(riws2009)
+
+for(m in 1:29){
+  if(m == 1){
+    weights <- as.data.frame(t(riws2009[,"CPI_U"])) # initialize calculated weights cont.
+    colnames(weights) <- riws2009$item_code # name weights same as index names
+  } else{
+  if(year(strata70_reg_dat$date[m]) > 2011){rm(m); break}
+  weights[m,] <- weights[m-1,] * (s70[m,] / s70[m-1,]) * (CPI[m-1,1] / CPI[m,1])
+  }
+} # Calculate weights for CPI 
+
+apply(weights, 1, sum)
+qplot(x = apply(weights, 1, sum), geom = "histogram")
+100/apply(weights, 1, sum)
 
 for(m in 2:100){
   if(year(strata70_reg_dat$date[m]) > 2011){break}
   cpi.hat[m,1] <- CPI[m-1,1] * sum( (s70[m,] / s70[m-1,]) * weights[m-1,])/100
-  weights[m,] <- weights[m-1,] * (s70[m,] / s70[m-1,]) * (CPI[m-1,1] / CPI[m,1])
   if(m == 100) rm(m)
-}
+} # Calculate CPI
 
 summary(cpi.hat - CPI[1:25,1])
 
-CPIs <- data.frame(strata70_reg_dat$date[2:25],  diff(cpi.hat$index), "CPI_hat") 
+CPIs <- data.frame(strata70_reg_dat$date[1:25],  cpi.hat$index, "CPI_hat")
 colnames(CPIs) <- c("date", "value", "Cat")
-CPI.hats <- data.frame(strata70_reg_dat$date[2:25], diff(CPI$index[1:25]), "CPI")
+CPI.hats <- data.frame(strata70_reg_dat$date[1:25], CPI$index[1:25], "CPI")
 colnames(CPI.hats) <- c("date", "value", "Cat")
+
+# CPIs <- data.frame(strata70_reg_dat$date[2:25],  diff(cpi.hat$index), "CPI_hat") 
+# colnames(CPIs) <- c("date", "value", "Cat")
+# CPI.hats <- data.frame(strata70_reg_dat$date[2:25], diff(CPI$index[1:25]), "CPI")
+# colnames(CPI.hats) <- c("date", "value", "Cat")
 
 plot_dat <- rbind.data.frame(CPIs, CPI.hats)
 
-
 ggplot(data = plot_dat) + 
-  geom_line(aes(x = date, y = value, color = Cat), size = 1.5) + 
-  ggtitle("CPI Month-to-month Change Estimates with Calculated Weights") +
-  theme(plot.title = element_text(hjust = 0.5))
+  geom_line(aes(x = date, y = value, color = Cat), size = 1.5) 
+  # ggtitle("CPI Month-to-month Change Estimates with Calculated Weights") +
+  # theme(plot.title = element_text(hjust = 0.5))
 
 # ggsave("Weights.jpg", width = 12, height = 5)
