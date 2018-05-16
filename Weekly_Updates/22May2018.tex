@@ -1,0 +1,48 @@
+\documentclass{article}
+
+\title{Macroeconomic Models: \\ Weekly Update}
+\author{Chris Comiskey, Open Data Group}
+\date{\today}
+
+\usepackage{natbib}
+\bibliographystyle{unsrtnat}
+
+\usepackage{fullpage}
+\usepackage{ulem}
+
+\usepackage{amsmath, amsthm, amssymb, amsfonts}
+\usepackage{mathtools}
+\usepackage{float}
+\usepackage{bbm}
+
+\usepackage{listings}
+
+
+\begin{document}
+
+\maketitle{}
+
+\begin{itemize}
+\item ``To estimate a relative importance for a component for a month other than December, one can use its previous published relative importance and update it by published price changes.'' \\ (https://www.bls.gov/cpi/tables/relative-importance/home.htm)
+
+\item I calculated the 2010 - 2011 weights by hand---with the December 2009 published weights---and calculated the CPI with those weights and all 68 strata subindices.
+    \begin{figure}[H]
+    \centering
+    \includegraphics[scale=.125]{/Users/cwcomiskey/Desktop/ODG/Macro-models/plots/Weights.jpg}
+    \end{figure}
+\item Viewing the calculation as a prediction, $\text{R}^{2} = 0.9989$; and a summary of the difference of month-to-month changes between the published CPI and calculated CPI (with recalculated monthy RIWs): 
+\begin{verbatim}
+   Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+-0.0452 -0.0233 -0.0116 -0.0108  0.0048  0.0143
+\end{verbatim}
+\item 
+    \begin{figure}[H]
+    \centering
+    \includegraphics[scale=.125]{/Users/cwcomiskey/Desktop/ODG/Macro-models/plots/CPI_70_25.jpg}
+    \end{figure}
+
+\end{itemize}
+
+
+
+\end{document}
