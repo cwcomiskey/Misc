@@ -23,6 +23,15 @@
 \maketitle{}
 
 \begin{itemize}
+\item ``The CPI item structure has four levels of classification. The eight {\bf major groups} are made up of 70 {\bf expenditure classes} (ECs), which in turn are divided into 211 {\bf item strata}.''
+
+\item BLS manual, Chapter 17, Appendix 5: The 4-character descriptors (e.g. FA01) are the item strata; the 2-character descriptors are the 70 expenditure classes; the 1-letter groupings are the 8 major groups. (Shane) \\
+e.g. FA031 \\
+*F = Food MAJOR GROUP \\
+*FA = Cereal EXPENDITURE CLASS \\
+*FA03 = Rice/pasta STRATA \\
+*FA031 = Rice/pasta ENTRY LEVEL ITEM
+
 \item ``To estimate a relative importance for a component for a month other than December, one can use its previous published relative importance and update it by published price changes.'' \\ (https://www.bls.gov/cpi/tables/relative-importance/home.htm)
 
 \item I calculated the 2010 - 2011 weights by hand---with the December 2009 published weights---and calculated the CPI with those weights and all 68 strata subindices.
@@ -35,13 +44,21 @@
    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 -0.0452 -0.0233 -0.0116 -0.0108  0.0048  0.0143
 \end{verbatim}
-\item 
+\item I think we can attribute the differences to rounding.
+\item The next plot adds a RIW25 line to the above plot. The RIW25 line uses only the 25 strata most correlated with CPI.
     \begin{figure}[H]
     \centering
     \includegraphics[scale=.125]{/Users/cwcomiskey/Desktop/ODG/Macro-models/plots/CPI_70_25.jpg}
     \end{figure}
-
+It seems clear that the top 25 strata are not sufficient for calculating/predicting CPI, even with perfect (true) subindices. This motivates further emphasis on collecting data for all strata.
 \end{itemize}
+
+\section*{Strata Variability}
+    \begin{figure}[H]
+    \centering
+    \includegraphics[scale=.125]{/Users/cwcomiskey/Desktop/ODG/Macro-models/plots/strata_var.jpg}
+    \includegraphics[scale=.125]{/Users/cwcomiskey/Desktop/ODG/Macro-models/plots/24strata_var.jpg}
+    \end{figure}
 
 
 
