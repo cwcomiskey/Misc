@@ -4,6 +4,7 @@ library(dplyr); library(ggplot2)
 
 # "Logistic regression model to predict customers' propensity of purchasing AL series policies"
 
+# Prudential Model ======
 # inverse logit function ==
 inv_logit <- function(x){1/(1 + exp(-x))}
 
@@ -94,14 +95,15 @@ for(i in 1:dim(plot_dat)[1]){
 ggplot(data = plot_dat, aes(x = agentTenure, y = p)) + 
   geom_line(aes(colour = as.factor(catastrophicFlag), 
                 linetype = as.factor(abnormalLengthOfStayFlag)),
-            size = 1.1) +
+            size = 2) +
   facet_grid(~ paidAmount) +
   labs(colour='Catastrophic Flag',
        linetype = 'Ab. Length of Stay') +
   ggtitle("Amount Paid") +
-  theme(plot.title = element_text(hjust = 0.5))
+  theme(plot.title = element_text(hjust = 0.5)) +
+  scale_color_manual(values=c("Black", "Orange"))
 
-ggsave("Prud.jpg", height = 5, width = 15)
+ggsave("Prud.jpg", height = 7, width = 15)
 
 
 # Examples from my research =====
