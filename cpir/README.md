@@ -1,0 +1,1 @@
+# Aggregate index calculating package
