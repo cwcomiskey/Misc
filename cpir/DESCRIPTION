@@ -1,0 +1,15 @@
+Package: cpir
+Type: Package
+Title: Aggregate Index Calculator
+Version: 0.1.0
+Author: Chris Comiskey
+Maintainer: The package maintainer <yourself@somewhere.net>
+Description: Functions for calculating (1) Ongoing Relative Importance Weights (RIWs) for subindices of some aggregate index (e.g. Expenditure Classes (ECs) for CPI); and (2) an aggregate index (e.g. CPI) from subindices (e.g. CPI from ECs) using RIWs
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+Imports:
+    dplyr,
+    lubridate,
+    tidyverse
+RoxygenNote: 6.0.1
