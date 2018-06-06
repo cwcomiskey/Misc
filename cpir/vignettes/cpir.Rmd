@@ -1,0 +1,137 @@
+---
+title: "Calculating Indexes with cpir"
+author: "Chris Comiskey, Open Data Group"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Calculating Indices with cpir}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, echo = FALSE}
+library(cpir)
+```
+
+This vignette shows how to use two functions, using three included datasets, and highlights our approach to organizing index and subindex dates.
+
+## Functions
+
+**cpir** contains two functions: 
+
+- `weightr` for calculating relative important weights (RIWs); 
+- `indexr` for calculating aggregate indices, such as the titular aggregate index  CPI (Consumer Price Index). 
+
+Implicit in these functions is an approach to arranging the index and subindex dates. 
+
+## Data
+
+**cpir** includes three datasets, which this vignette uses to show how `weightr` and `indexr` functionality:
+
+1. `index` an example aggregate index; actual CPI, by date
+2. `subindices` an example set of subindices; actual expenditure class subindices, by date
+3. `weights` example RIWs; actual December 2009 RIWs
+
+Let's take a look at a bit of each dataset.
+
+#### 1. `index`
+This dataset is a 100 $\times$ 2 data frame, where each row consists of a date and corresponding index value. Here are the first six rows:
+```{r, echo = FALSE}
+head(index)
+```
+
+#### 2. `subindices`
+This dataset is a 100 $\times$ 69 data frame, where each row consists of a date and 68 subindex values. The subindex column names are the official [BLS](https://www.bls.gov/help/hlpforma.htm) "item codes".  Here are the first five rows and five columns:
+```{r, echo=FALSE}
+subindices[1:5, 1:6]
+```
+
+#### 3. `weights`
+This dataset is a 1 $\times$ 69 data frame, where column one is the date of the category weights occupying the remaining 68 columns. Here are the first five rows and five columns:
+```{r, echo=FALSE}
+weights[1,1:6]
+```
+Note that the order of the BLS item codes matches in `subindices` and `weights`.
+
+## RIWs with `weightr`
+The function `weightr` applies a [BLS](https://www.bls.gov/opub/hom/pdf/homch17.pdf) formula to calculate the month $t$ weight of a single subindex. Given weights $\text{RIW}_{t-1}$; subindices $\text{EC}_{t}$, $\text{EC}_{t-1}$; and aggregate indices $\text{CPI}_{t}$, $\text{CPI}_{t-1}$; the formula for the month $t$ weight is:
+
+$$ \text{RIW}_{t} = \text{RIW}_{t-1} \left(
+  \frac{\text{EC}_{t}}{\text{EC}_{t-1}}
+  \right) \left( \frac{\text{CPI}_{t-1}}
+  {\text{CPI}_{t}} \right).$$
+  
+Accordingly, `weightr(...)` takes the following five arguments.
+
+Argument         | Variable             | Description
+-----------------|----------------------|-------------
+`w0`             | $\text{RIW}_{i,t-1}$ | Reference weight
+`sub0`           | $\text{EC}_{i,t-1}$  | Reference subindex
+`index0`         | $\text{CPI}_{t-1}$   | Reference aggregate index
+`sub1`           | $\text{EC}_{i,t}$    | Current subindex
+`index1`         | $\text{CPI}_{t}$     | Current aggregate index
+.
+.
+****** **REITERATE THAT ITEM_CODE ORDER MATCHES** *****
+.
+.
+
+We can calculate the second month ("2010-01-01") weights.
+```{r, eval=FALSE}
+weightr(
+  w0 = weights[1,-1],      # reference month weights vector
+  sub0 = subindices[1,-1], # reference month subindices vector
+  index0 = index[1,2],     # reference month index
+  sub1 = subindices[2,-1], # current month subindices vector
+  index1 = index[2,2]      # current month index
+  )
+```
+Notice that all reference dates match, for reference and current months respectively; i.e.
+```{r}
+weights[1,'Date'] == subindices[1,'date'] &
+subindices[1,'date'] == index[1,'date'] &
+subindices[2,'date'] == index[2,'date']
+```
+That is, the reference weights, subindices, and aggregate index all come from the same point in time; and the current subindices come from the same point in time as the current index.
+
+## Aggregate Index with `indexr`
+The function `indexr` applies a [BLS](https://www.bls.gov/opub/hom/pdf/homch17.pdf) formula to calculate a month $t$ aggregate index, such as CPI. Let $t$ represent time, and $i$ index subindices. Then given weights $\text{RIW}_{i,t-1}$; subindices $\text{EC}_{i,t}$, $\text{EC}_{i,t-1}$; and the previous aggregate indices $\text{CPI}_{t-1}$; the formula for the month $t$ aggregate index $\text{CPI}_{t}$ is:
+
+$$ \text{CPI}_{t} = \text{CPI}_{t-1} \left(
+  \sum_{i} \left[
+    \text{RIW}_{i,t-1} \left(
+      \frac{\text{EC}_{i,t}}{\text{EC}_{i,t-1}}
+    \right)
+  \right]
+\right) $$
+
+Accordingly, `indexr(...)` takes the following arguments.
+
+Argument         | Variable             | Description
+-----------------|----------------------|-------------
+`w0`             | $\text{RIW}_{i,t-1}$ | Reference weights
+`sub0`           | $\text{EC}_{i,t-1}$  | Reference subindices
+`index0`         | $\text{CPI}_{t-1}$   | Reference aggregate index
+`sub1`           | $\text{EC}_{i,t}$    | Current subindices
+
+.
+.
+******* **REITERATE THAT ITEM_CODE ORDER MATCHES** *******
+.
+.
+
+We can caluclate a current month's aggregate index, in this case month 2 "2010-01-01".
+```{r}
+indexr(
+  w0 = weights[1,-1],      # reference month weights vector
+  sub0 = subindices[1,-1], # reference month subindices vector
+  index0 = index[1,2],     # reference month index
+  sub1 = subindices[2,-1]  # current month subindices vector
+  )
+```
+Again, it is important to note that the dates match as they should, and need to.
+```{r}
+weights[1,'Date'] == subindices[1,'date'] &
+subindices[1,'date'] == index[1,'date']
+```
+That is, the reference weights, subindices, and aggregate index all come from the same point in time.
