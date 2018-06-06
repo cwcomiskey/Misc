@@ -1,9 +1,9 @@
-#' Aggregate Index
+#' Example Aggregate Index (CPI)
 #'
 #' An aggregate index, in this case the Consumer Price Index, and its associated date.
 "index"
 
-#' Subindices
+#' Example Subindices (ECs)
 #'
 #' The subindices, and associated date, used to calculate aggregate index; in this case Expenditure Classes to Calculate CPI.
 "subindices"
