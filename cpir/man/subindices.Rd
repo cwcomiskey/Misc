@@ -3,7 +3,7 @@
 \docType{data}
 \name{subindices}
 \alias{subindices}
-\title{Subindices}
+\title{Example Subindices (ECs)}
 \format{An object of class \code{data.frame} with 100 rows and 69 columns.}
 \usage{
 subindices

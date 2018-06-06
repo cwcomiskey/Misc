@@ -3,7 +3,7 @@
 \docType{data}
 \name{index}
 \alias{index}
-\title{Aggregate Index}
+\title{Example Aggregate Index (CPI)}
 \format{An object of class \code{data.frame} with 100 rows and 2 columns.}
 \usage{
 index

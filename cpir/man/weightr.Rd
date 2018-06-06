@@ -15,11 +15,34 @@ weightr(w0, sub0, index0, sub1, index1)
 
 \item{sub1}{the current set of subindices.}
 
-\item{index1}{the currewnt value of the index}
+\item{index1}{the current value of the index}
 }
 \value{
 A vector of weights
 }
 \description{
 This function calculates the relative importance weights for a collection of subindices, based on changes in the subindices and the aggregate index.
+}
+\examples{
+\dontrun{
+# Calculate Month 2 (2010-01-01) weights using
+(i) Month 1 (2009-12-01) weights, subindices, and
+aggregate index
+(ii) Month 2 subindices and aggregate index
+
+weightr(
+  w0 = weights[1,-1],
+  sub0 = subindices[1,-1],
+  index0 = index[1,2],
+  sub1 = subindices[2,-1],
+  index1 = index[2,2]
+  )
+
+# Make sure the date for reference weight/sub/index
+match (as well as for current month);
+i.e.
+weights[1,'Date'] == subindices[1,'date'] &
+subindices[1,'date'] == index[1,'date'] &
+subindices[2,'date'] == index[2,'date']
+}
 }
