@@ -1,0 +1,54 @@
+\documentclass{article}
+
+\title{Macroeconomic Models: \\ Weekly Update}
+\author{Chris Comiskey, Open Data Group}
+\date{\today}
+
+\usepackage{natbib}
+\bibliographystyle{unsrtnat}
+
+\usepackage{fullpage}
+\usepackage{ulem}
+
+\usepackage{amsmath, amsthm, amssymb, amsfonts}
+\usepackage{mathtools}
+\usepackage{float}
+\usepackage{bbm}
+
+\usepackage{listings}
+
+
+\begin{document}
+
+\maketitle{}
+
+\begin{itemize}
+\item Discussing things this week, it was noted that the BLS does not provide RIWs for ELIs; for aggregating to strata indices.
+\item With the previous bullet in mind, recall Motor Fuel, the Expenditure Class which we saw last week ``explains'' the most CPI month-to-month variation \footnote{according to $R^{2}$ of a simple linear regression of every EC individually}. Using this EC for an example.
+\item Consider regressing the Gasoline strata\footnote{The month-to-month changes in the Gasoline Strata.} (subindex of Motor Fuel EC) on its three ELIs (i) Regular Unleaded Gasoline; (ii) Mid-grade Unleaded Gasoline; and (iii) Premium Unleaded Gasoline.
+$$ \text{Gas}_{i} = \beta_{0} + \beta_{1}\text{Regular}_{i} + \beta_{2}\text{Mid}_{i} + \beta_{1}\text{Premium}_{i} + \epsilon_{i} $$
+This regression gives helpful results.
+\begin{verbatim}
+Call:
+lm(formula = diff(gas) ~ diff(reg) + diff(mid) + diff(prem), 
+    data = g)
+Coefficients:
+             Estimate Std. Error t value Pr(>|t|)    
+(Intercept) -0.004356   0.006727  -0.648    0.518    
+diff(reg)    0.748003   0.009953  75.154   <2e-16 ***
+diff(mid)    0.089597   0.008671  10.333   <2e-16 ***
+diff(prem)   0.166801   0.009188  18.155   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Multiple R-squared:  0.9999,	Adjusted R-squared:  0.9999 
+F-statistic: 1.148e+06 on 3 and 289 DF,  p-value: < 2.2e-16
+\end{verbatim}
+\item Two points worth mentioning:
+  \begin{enumerate}
+  \item $\text{R}^{2} \approx 1$, indicating that a linear combination of the ELIs explains the variation in the strata index. 
+  \item $\sum_{i} \beta_{i} \approx 1$, as RIWs would sum to one. 
+  \end{enumerate}
+Together these points suggest such a regression provides estimates of the missing RIWs for aggregating ELIs to strata level indices.
+\end{itemize}
+\end{document}
