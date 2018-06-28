@@ -1,0 +1,22 @@
+Package: macro
+Type: Package
+Title: (Mostly) Data for CPI Models
+Version: 0.1.0
+Author: Chris Comiskey
+Maintainer: Chris Comiskey <yourself@somewhere.net>
+Description: Macroeconomic modeling project data, functions, etc.
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+Imports:
+    data.table,
+    dplyr,
+    ggplot2,
+    ggfortify,
+    httr,
+    jsonlite,
+    lubridate,
+    readr,
+    stringr,
+    tidyverse
+RoxygenNote: 6.0.1
