@@ -1,16 +1,16 @@
 #' My Walmart API Key
 "key"
 
-#' 184 Entry Level Items, by name
+#' 208 Entry Level Items, by name
 "ELI"
 
-#' 884 Walmart Item IDs
+#' 989 Walmart Item IDs
 "dat_itemIDs"
 
-#' 920 x 8: Walmart API search by Name
+#' 1036 x 8: Wal-API, query by Name results
 "dat"
 
-#' 884 x 8: Walmart API search by Item ID
+#' 989 x 8: Wal-API, query by ID results
 "datr"
 
 
