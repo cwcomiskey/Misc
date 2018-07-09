@@ -33,8 +33,8 @@ package_loader <- function(){
 
 # First read in data ======
 # Read in cu.series descriptor to get filenames
-seriesList <- read.table("cu.series.txt", header = T, 
-                         sep = "\t", stringsAsFactors = F, quote = NULL)
+seriesList <- read.table("cu.series.txt", header = T, sep = "\t", 
+                         stringsAsFactors = F, quote = NULL)
 
 itemStrata <- seriesList[390:631, ] %>% filter(nchar(item_code) != 5); rm(seriesList)
 itemStrataSub <- itemStrata[nchar(itemStrata$item_code) != 4, ]
@@ -79,78 +79,8 @@ for(i in 1:8){
 itemStrataNames <- substr(itemStrataSub$item_code, 3, 6)
 expenditureClassesNames <- substr(expenditureClasses$item_code, 3, 4)
 
-# Plots =======
-# time series: expenditure classes
-subEx <- exClasses %>% filter(as_date(DATE) > "1996-12-31") 
-par(mfrow = c(3,4))
-for(i in 1:70){
-  tx <- subEx[subEx$series == expenditureClassesNames[i],]
-  xx <- ts(tx$value, start = c(first(tx$year), first(as.numeric(substr(tx$period,2,3)))), 
-           end = c(last(tx$year), last(as.numeric(substr(tx$period,2,3)))), frequency = 12)
-  plot(xx, xlab = "time", ylab = "", main = expenditureClassesNames[i])
-}
-
-# time series: item strata
-iStrata %>% filter(as_date(DATE) > "1996-12-31") -> subI
-par(mfrow = c(3,5))
-for(i in 1:169){
-  tx <- subI[subI$series == itemStrataNames[i],]
-  xx <- ts(tx$value, start = c(first(tx$year), first(as.numeric(substr(tx$period,2,3)))), 
-           end = c(last(tx$year), last(as.numeric(substr(tx$period,2,3)))), frequency = 12)
-  plot(xx, xlab = "time", ylab = "", main = itemStrataNames[i])
-}
-
-
-
-# check data completeness ========
-for(i in 1:70){
-  if(i ==1) {
-    subEx <- exClasses %>% filter(as_date(DATE) > "1996-12-31") 
-    exlis <- list()
-  }
-  tx <- subEx[subEx$series == expenditureClassesNames[i],]
-  xx <- ts(tx$value, start = c(first(tx$year), first(as.numeric(substr(tx$period,2,3)))), 
-           end = c(last(tx$year), last(as.numeric(substr(tx$period,2,3)))), frequency = 12) 
-  temp <- sum(diff(t(table(tx$year, tx$period)))^2)
-  exlis[[i]] <- temp
-  if(i == 70) rm(temp, i, tx, xx, subEx)
-}
-
-for(i in 1:169){
-  if(i == 1) {
-    ilis <- list()
-    subI <- iStrata %>% filter(as_date(DATE) > "1996-12-31") 
-  }
-
-  tx <- subI[subI$series == itemStrataNames[i],]
-  xx <- ts(tx$value, start = c(first(tx$year), first(as.numeric(substr(tx$period,2,3)))), 
-           end = c(last(tx$year), last(as.numeric(substr(tx$period,2,3)))), frequency = 12)
-  temp <- sum(diff(t(table(tx$year, tx$period)))^2)
-  ilis[[i]] <- temp
-  if(i == 169) rm(temp, i, tx, xx, subI)
-}
-
-
-
-# SO THERE ARE 3 ITEM STRATA (HP01,HP02, HP04) with missing data 
-# will deal with that later 
-
-# Also there are 15 item strata that don't appear in the 169 iStrata listed -- these have a single
-# (or double, if there's an unsampled item strata) item strata and so the 
-# expenditure class value is same.  Later we will need to fill these in. 
-
-rm(ilis, exlis)
-
 # auto-forecast 1-month forward for EC and IS ==========
-#   use auto.arima to fit model
-#   use log transform 
-#   can also create hierarchy of estimates 
-#     a.  naive (last value) 
-#     b.  mean over last year 
-#     c.  last value 1 year ago (seasonal naive)
-#     d.  linear trend over last year 
-#     e.  ewma model 
-#     f.  arima model (that's what next function is)
+#   auto.arima to fit model, log transform, hierarchy of estimates 
 
 # function to automatically calculate best ARIMA model for each component
 arimaModCPI <- function(xx, 
@@ -158,17 +88,17 @@ arimaModCPI <- function(xx,
                         startTrain = "1997-01-01",          # START DATE
                         endTrain = "2016-12-31") {          # END DATE
   
-  xx <- xx %>% filter(DATE >= startTrain) # traing period only
+  xx <- xx %>% filter(DATE >= startTrain) # post START DATE
   
-  xstart <- c(first(year(xx$DATE)), first(month(xx$DATE))) # start - year, month
-  endTrain.ts <- c(year(endTrain), month(endTrain))        # train end - year, month
-  xend <- c(last(year(xx$DATE)), last(month(xx$DATE)))     # end - year, month
+  xstart <- c(first(year(xx$DATE)), first(month(xx$DATE))) # start date
+  endTrain.ts <- c(year(endTrain), month(endTrain))        # TRAIN end date
+  xend <- c(last(year(xx$DATE)), last(month(xx$DATE)))     # end date
   
-  xxt <- ts(xx$value, start= xstart, end = endTrain.ts, freq = 12) # TRAIN interval
-  xxs <- ts(xx$value, start = xstart, end = xend, freq = 12) # ENTIRE interval
+  xxt <- ts(xx$value, start= xstart, end = endTrain.ts, freq = 12) # TRAIN ts
+  xxs <- ts(xx$value, start = xstart, end = xend, freq = 12) # ENTIRE ts
   
-  lxxt <- log(xxt) # log TRAIN interval
-  lxxs <- log(xxs) # log ENTIRE interval
+  lxxt <- log(xxt) # log TRAIN ts
+  lxxs <- log(xxs) # log ENTIRE ts
   
   flength <- length(lxxs) - length(lxxt) # TEST interval length
   
@@ -190,7 +120,7 @@ arimaModCPI <- function(xx,
     list(seriesName = xName, # from argument
          model = lxxt.mod,   # model
          actual = actual,    # series 
-         fcst1 = fcst1,      # train-test forecast
+         fcst1 = fcst1,      # train-test forecast --- NEVER USED AGAIN
          fcst2 = fcst2       # all-test forecast
          )
     )
@@ -333,80 +263,62 @@ rw_import <- function(dat){
 rw301 <- rw_import(dat = "cpi-u-201801.csv")
 
 exc <- exClasses %>% filter(DATE == "2018-01-01")  # Jan 2018
-  test1 <- match(exc2$value, as.numeric(rw301$X16))
+  test1 <- match(exc$value, as.numeric(rw301$X16))  # find weights
 exc2 <- exClasses %>% filter(DATE == "2017-12-01") # Dec 2017
 
 exc$weight <- as.numeric(rw301$X3[test1])/100; rm(test1) # add weights
 
 # Recall: exSim = simple forecasts
-a2 <- lapply(exSim, function(x)c(x[[1]][1], x[[2]][1], x[[3]][1], 
-                                 x[[4]][1], x[[5]][1], x[[6]][1])) %>% 
+a2er <- function(rwX = rw301, abc = 1){
+  lapply(exSim, function(x)c(x[[1]][abc], x[[2]][abc], x[[3]][abc], 
+                             x[[4]][abc], x[[5]][abc], x[[6]][abc])) %>% 
   do.call("rbind", .) %>%
   data.frame(.) %>%
   setNames(., names(exSim[[1]])) %>%
   mutate(series = names(exSim)) %>%
-  merge(., data.frame(series = exc$series, DATE = exc$DATE, wgt = exc$weight, 
-                      val0 = exc2$value, val1 = exc$value), by = "series") %>%
+  merge(., data.frame(series = exc$series, 
+                      DATE = exc$DATE, 
+                      wgt = exc$weight, 
+                      val0 = exc2$value, 
+                      val1 = exc$value), 
+        by = "series") %>%
   mutate(err = (actual - farima)/val0,
-         wgterr = as.numeric(rw301$X15[1])*(wgt*(actual - farima)/val0)/sum(wgt)
-         )
+         wgterr = as.numeric(rwX$X15[1])*(wgt*(actual - farima)/val0)/sum(wgt)
+  )
+  }
+a2 <- a2er()
 
-rx15 <- as.numeric(rw301$X15[1])
-res_201801 <- with(a2, c(rx15 * sum(wgt * actual/val0)/sum(wgt),
-                         rx15 * sum(wgt * fnaive/val0)/sum(wgt),
-                         rx15 * sum(wgt * fmean12/val0)/sum(wgt),
-                         rx15 * sum(wgt * fnaiveS/val0)/sum(wgt),
-                         rx15 * sum(wgt * ftrend12/val0)/sum(wgt),
-                         rx15 * sum(wgt * farima/val0)/sum(wgt)
+Dec17 <- as.numeric(rw301$X15[1])
+res_201801 <- with(a2, c(Dec17 * sum(wgt * actual/val0)/sum(wgt),
+                         Dec17 * sum(wgt * fnaive/val0)/sum(wgt),
+                         Dec17 * sum(wgt * fmean12/val0)/sum(wgt),
+                         Dec17 * sum(wgt * fnaiveS/val0)/sum(wgt),
+                         Dec17 * sum(wgt * ftrend12/val0)/sum(wgt),
+                         Dec17 * sum(wgt * farima/val0)/sum(wgt)
                          )
-                   )
+                   ) # Jan'18 CPI predictions
 
-res_201801 - res_201801[1]
+res_201801 - res_201801[1] # errors
 res_201801
 
 # february ========
-rw_import <- function(dat){
-  scan(dat, sep = ",", what = "character", quote = '\"') %>%
-    data.frame(matrix(., nc = 44, byr = T), stringsAsFactors = F) %>%
-    mutate(
-      Label = X2 %>% gsub("\\(|\\)", "", .) %>% gsub("[0-9]+", "", .)
-    ) %>%
-    filter(X3 != "")
-} # import RIW file
+rw302 <- rw_import(dat = "cpi-u-201802.csv")
 
-# This won't work b/c %>% ...matrix(., ...)
-rw302 <- scan("cpi-u-201802.csv", sep = ",", what = "character", quote = '\"') %>%
-  data.frame(matrix(., nc = 44, byr = T), stringsAsFactors = F) %>%
-  mutate(Label = X2 %>% gsub("\\(|\\)", "", .) %>% gsub("[0-9]+", "", .)) %>%
-  filter(X3 != "")
-
-
-
-exClasses %>% filter(DATE == "2018-02-01") -> exc
-test1 <- match(exc$value, as.numeric(rw302$X16))
-# doublecheck by doing a second month
-exClasses %>% filter(DATE == "2018-01-01") -> exc2
-test2 <- match(exc2$value, as.numeric(rw302$X15)) 
+exc <- exClasses %>% filter(DATE == "2018-02-01") 
+  test1 <- match(exc$value, as.numeric(rw302$X16))
+exc2 <- exClasses %>% filter(DATE == "2018-01-01") 
+  test2 <- match(exc2$value, as.numeric(rw302$X15)) 
 test1 - test2
 
 exc$weight <- as.numeric(rw302$X3[test1])/100
-a1 <- names(exSim)
-a2 <- lapply(exSim, function(x)c(x[[1]][2], x[[2]][2], x[[3]][2], x[[4]][2], x[[5]][2], x[[6]][2]))
-a2 <- do.call("rbind", a2)
-a2 <- data.frame(a2)
-names(a2) <- names(exSim[[1]])
-a2$series <- a1
 
-# now merge with file of actuals and weights (exc)
-a3 <- data.frame(series = exc$series, DATE = exc$DATE, wgt = exc$weight, 
-                 val0 = exc2$value, val1 = exc$value)
+a2 <- a2er(rwX = rw302, abc = 2)
 
-a4 <- merge(a3, a2, by = "series")
-a5 <- data.frame(series = a4$series, err = as.numeric(rw302$X15[1])*(a4$wgt * (a4$actual - a4$farima)/a4$val0)/sum(a4$wgt))
+a4_201802 <- a2
+a4 <- a2
 
-a4$err <- (a4$actual - a4$farima)/a4$val0
-a4$wgterr <- as.numeric(rw302$X15[1])*(a4$wgt * (a4$actual - a4$farima)/a4$val0)/sum(a4$wgt)
-a4_201802 <- a4
+#  =================== LEFT OFF HERE ===================
+
 res_201802 <- c(as.numeric(rw302$X15[1]) * sum(a4$wgt * a4$actual/a4$val0)/sum(a4$wgt),
                 as.numeric(rw302$X15[1]) * sum(a4$wgt * a4$fnaive/a4$val0)/sum(a4$wgt),
                 as.numeric(rw302$X15[1]) * sum(a4$wgt * a4$fmean12/a4$val0)/sum(a4$wgt),
