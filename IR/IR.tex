@@ -1,0 +1,89 @@
+\documentclass{article}
+
+\title{Ingersol Rand Notes}
+\author{Chris Comiskey, Open Data Group}
+\date{\today}
+
+\usepackage{natbib}
+\bibliographystyle{unsrtnat}
+
+\usepackage{fullpage}
+\usepackage{ulem}
+
+\usepackage{amsmath, amsthm, amssymb, amsfonts}
+\usepackage{mathtools}
+\usepackage{float}
+\usepackage{bbm}
+
+\usepackage{listings}
+
+
+\begin{document}
+
+\maketitle{}
+
+\section*{Misc}
+\begin{itemize}
+\item Model evaluation 
+  \begin{itemize}
+  \item Concordance index (C-index)
+  \item Brier score
+  \end{itemize}
+\item Packages
+  \begin{itemize}
+  \item {\bf rpart}, {\bf survival}, 
+  \end{itemize}
+\item Methods
+  \begin{itemize}
+  \item Multi-Task Logistic Regression (MLTR) 
+  \item Neural-MLTR (N-MLTR)
+  \end{itemize}
+\end{itemize}
+
+\section{Articles}
+\subsection{An Interval-Valued Neural Network Approach for Uncertainty Quantification in Short-Term Wind Speed Prediction}
+\begin{itemize}
+\item From abstract: ``We consider the task of performing prediction with neural networks on the basis of uncertain input data expressed in the form of intervals. We aim at quantifying the uncertainty in the prediction arising from both the input data and the prediction model. A multi-layer perceptron neural network (NN) is trained to map interval-valued input data into interval outputs, representing the prediction intervals (PIs) of the real target values.''
+\item ``Uncertainties can be classified in two distinct types: epistemic and aleatory. 
+      \begin{itemize}
+      \item epistemic -- ``imprecise model representation of the system behavior, in terms of uncertainty in both the hypotheses assumed (structural uncertainty) and the values of the parameters of the model (parameter uncertainty)''
+      \item aleatory -- ``inherent variability of the observed physical phenomenon, and it is therefore also named stochastic uncertainty, irreducible uncertainty, or inherent uncertainty''
+      \end{itemize}
+\item A. M. Roque, C. Maté, J. Arroyo, and Á. Sarabia, “{\bf iMLP: Applying Multi-Layer Perceptrons to Interval-Valued Data},” Neural Processing Letters, vol. 25, no. 2, pp. 157–169, Apr. 2007.
+\item A. Khosravi, S. Nahavandi, D. Creighton, and A. F. Atiya, “{\bf Lower Upper Bound Estimation Method for Construction of Neural Network- Based Prediction Intervals},” IEEE Transactions on Neural Networks, vol. 22, no. 3, pp. 337-346, March 2011. (ADDED TO DRIVE)
+\item ``In this paper, we present an interval-valued prediction modeling framework based on a data-driven learning approach, more specifically a multi-layer perceptron neural network (NN)''
+\item Section 2: overview of ``interval-valued NNs for PIs estimation''
+\end{itemize}
+
+\subsection{Deep Learning for Patient-Specific Kidney Graft Survival Analysis}
+\begin{itemize}
+\item [6] Hemant Ishwaran, Udaya B Kogalur, Eugene H Blackstone, and Michael S Lauer. Random survival forests. The annals of applied statistics, pages 841–860, 2008. (ADDED TO DRIVE)
+\end{itemize}
+
+\subsection{Random Survival Forrests}
+\begin{itemize}
+\item ``As is well known, constructing ensembles from base learners, such as trees, can sub- stantially improve prediction performance.''
+\item ``ensemble learning can be improved further by inject- ing randomization into the base learning process''
+\item ``In RF, randomization is introduced in two forms. First, a randomly drawn bootstrap sample of the data is used to grow a tree. Second, at each node of the tree, a randomly selected subset of vari- ables (covariates) is chosen as candidate variables for splitting. Averaging over trees, in combination with the randomization used in growing a tree, enables RF to approximate rich classes of functions while maintaining low generalization error.''
+\item Bunch of limitations with traditional approaches--proportional hazards assumption, parametric, going beyond linearity problematic--``... these difficulties are handled automatically using forests.'' 
+\item The setup:
+  \begin{itemize}
+  \item $h =$ terminal nodes
+  \item $l = 1, ..., N(h)$ = distinct event times at node h
+  \item $T_{l,h} = t_{1,h} < t_{2,h} < ... < t_{N(h),h}$ = survival time
+  \item $\delta_{l,h} = \\ 0: \text{censored} \\ 1: \text{event}$
+  \item $i =$ individual
+  \item $d_{l,h} =$ \# deaths at event time $l$, node $h$
+  \item $Y_{l,h} =$ \# individuals at risk at event time $l$, node $h$
+  \end{itemize}
+\item Hazard = $\lambda(t)$; cumulative Hazard = $\Lambda(t)$
+\item Cumulative Hazard function: think of it as ``the sum of the risks you face going from duration 0 to t'' (from Ch 7); 
+\end{itemize}
+
+
+    
+
+
+%
+
+\end{document}
