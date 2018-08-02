@@ -1,24 +1,28 @@
-  library(dplyr)
-  library(lubridate)
-  library(ggplot2)
-  library(ir)
-
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+library(ir)
+library(LTRCtrees)
+library(survival)
+library(rpart.plot) 
+library(partykit)
   
+# Load, format =====
 # TK <- read.csv("~/Desktop/ODG/IngersolRand/NA_DTF_wPREDICTORS_3.csv")
 # names(TK)
 
-# devtools::use_data(tk7, pkg = "ir")
+# devtools::use_data(TK_AG, pkg = "ir")
 
-data("TK")
-TK <- TK %>% mutate(mfg_date = ymd_hms(mfg_date),
-                    serial = as.character(serial)) %>% 
-  arrange(serial, months_in_field) %>%
-  filter(months_in_field > 0)
+# TK <- TK %>% 
+#   mutate(mfg_date = ymd_hms(mfg_date), 
+#          serial = as.character(serial)) %>% 
+#   arrange(serial, months_in_field) %>%
+#   filter(months_in_field > 0)
 
-# Anderson-Gill style ======
+# Format to Anderson-Gill style ======
 
-# Add 'first' and 'last' columns to tk7
-# i.e. logical first/last obs. of that serial #
+# Add 'first' and 'last' indicator columns to TK
+# i.e. indicator first/last obs. of that serial #
 for(i in 2:dim(TK)[1]){
   if(i == 2) first_serial <- "TRUE"
   first_serial[i] <- !(TK$serial[i] == TK$serial[i-1]) 
@@ -29,18 +33,35 @@ for(i in 2:dim(TK)[1]){
   }
 } 
 
-TK <- TK %>%
-  mutate(
-    time1 = ifelse(first_serial, 0, lag(months_in_field)),
-    time2 = months_in_field
-    )
+# TK <- TK %>%
+#   mutate(
+#     time1 = ifelse(first_serial, 0, lag(months_in_field)),
+#     time2 = months_in_field
+#     )
 
-fit.cox <- coxph(Surv(time1, time2, event) ~ max_return_z1 + min_return_z1 + 
-                   max_return_z1 + min_return_z1, data = TK)
-LTRCART.fit <- LTRCIT(Surv(time1, time2, event) ~ max_return_z1 + min_return_z1 + 
-                        max_return_z1 + min_return_z1, data = TK)
-LTRCIT.fit <- LTRCART(Surv(time1, time2, event) ~ max_return_z1 + min_return_z1 + 
-                        max_return_z1 + min_return_z1, data = TK)
+# ir::TK_AG -- properly Anderson-Gill formatted data
+  
+# fit LTRC model ======
+data(TK_AG)
+
+fit.cox <- coxph(
+  Surv(time1, time2, event) ~ max_return_z1 + min_return_z1, 
+  data = TK_AG)
+
+LTRCART.fit <- LTRCART(
+  Surv(time1, time2, event) ~ max_return_z1 + min_return_z1 + max_ambient + min_ambient, 
+  data = TK_AG) 
+
+LTRCIT.fit <- LTRCIT(
+  Surv(time1, time2, event) ~ max_return_z1 + min_return_z1 + max_ambient + min_ambient, 
+  data = TK_AG)
 
 fit.cox
 rpart.plot.version1(LTRCART.fit, type = 0)
+plot(LTRCIT.fit)
+
+# type = “prob”: list of predicted KM curves
+# KM_curves <- predict(LTRCIT.fit, newdata = , type = "prob")
+
+# type = "response": predicted median survival time
+# predict(LTRCIT.fit, newdata = , type = "response")
