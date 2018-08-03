@@ -1,0 +1,9 @@
+{
+  "Description": "Data for LTRC model prediction",
+  "Loop": false,
+  "Transport": {
+    "Type": "file",
+    "Path": "/root/data/TK_demo_out.?"
+  },
+  "Schema": { "$ref":"output.avsc"}
+}

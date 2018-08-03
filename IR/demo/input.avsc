@@ -1,0 +1,10 @@
+{
+  "name": "Input",
+  "type": "record",
+  "fields" : [
+    {"name": "max_return_z1", "type": "double"},
+    {"name": "min_return_z1", "type": "double"},
+    {"name": "max_ambient", "type": "double"},
+    {"name": "min_ambient", "type": "double"}
+  ]
+}
