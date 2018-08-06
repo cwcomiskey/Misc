@@ -5,5 +5,5 @@
     "Type": "file",
     "Path": "/root/data/TK_demo.RData"
   },
-  "Schema": { "$ref":"input.avsc"}
+  "Schema": { "$ref":"input"}
 }

@@ -18,7 +18,7 @@ begin <- function(){
 
 action <- function(dat){t
   
-  # predicted median survival time
+  # predicted median survival time of fitted KM curve
   medians <- predict(LTRCIT.fit, newdata = dat, type = "response")
   
   emit(medians)

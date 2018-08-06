@@ -3,7 +3,7 @@
   "Loop": false,
   "Transport": {
     "Type": "file",
-    "Path": "/root/data/TK_demo_out.?"
+    "Path": "/root/data/TK_demo_out.json"
   },
-  "Schema": { "$ref":"output.avsc"}
+  "Schema": { "$ref":"output"}
 }
