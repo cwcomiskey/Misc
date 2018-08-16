@@ -5,32 +5,53 @@ library(stringr)
 library(httr)
 macro::depends()
 
-# From the jaws of defeat... 
+collect_car_lease_dat <- function(){
+  lease_url <- "https://www.carsdirect.com/deals-articles/cheapest-lease-deals"
+  
+  l <- xml2::read_html(lease_url) %>%
+    html_nodes("#article-body .left-column") %>%
+    html_text()   %>%
+    strsplit(split = "\n") %>%
+    unlist() %>% 
+    stringr::str_trim() %>%
+    .[. != ""] %>%
+    .[. != "Back to top of page"] %>%
+    .[-grep("Cheapest", .)]
+  
+  nam <- l[1:4]
+  l <- l[-(1:4)]
+  
+  for(i in 1:(length(l)/4)){
+    if(i == 1){
+      dat <- data.frame(matrix(ncol = 4))
+      colnames(dat) <- nam
+  }
+    
+    dat[i,] <- l[(4*(i-1) + 1):(4*(i-1) + 4)]
+    
+    if(i == (length(l)/4)){
+      dat <- filter(dat, Vehicle != "Vehicle")
+      dat <- cbind.data.frame(dat, Date = today())
+      dat <- mutate(dat, Price = as.numeric(gsub("\\$", "", `Effective Cost`)))
+      rm(i, nam, l, lease_url)}
+  }
+  return(dat)
+}
 
-xml2::read_html("https://www.carsdirect.com/deals-articles/cheapest-lease-deals") %>%
-  html_nodes("#article-body span") 
+# (1) load
 
-# ... to VICTORY!!!
+car_lease_dat <- data.table::fread("car_lease_dat.csv") %>%
+  mutate("date" = lubridate::ymd(`date`))
 
-# FUCK. YEAH!!
+# (2) collect
 
-# ===== Experimentation ======
+dat <- collect_car_lease_dat()
 
-xml2::read_html("http://www.vw.com/special-offers/") %>% 
-  html_nodes("h2.offerTitle") # all <h2> of class "offerTitle"
-# HUZZAH!!
+# (3) combine
 
-xml2::read_html("http://www.vw.com/special-offers/") %>% 
-  html_nodes("h2.modelName") # all <h2> of class "modelName"
-# HUZZAH!!
+car_lease_dat <- rbind.data.frame(car_lease_dat, dat)
 
-xml2::read_html("http://www.vw.com/special-offers/") %>% 
-  html_nodes("h2.offerTitle") # all <h2> of class "offerTitle"
-# HUZZAH!!
- 
-xml2::read_html("http://www.vw.com/special-offers/") %>% 
-  html_nodes("div.mf-container") %>%
-  html_nodes("[data-model=allnewjetta]")
+# (4) resave
 
-
+data.table::fwrite(car_lease_dat, "car_lease_dat.csv")
 
