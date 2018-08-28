@@ -1,4 +1,4 @@
-# car rental
+# car rentals
 
 macro::depends()
 
@@ -6,14 +6,9 @@ macro::depends()
 # API
 # username: chriscomiskey
 # password: Koufax32
-# Cosumer key: lGMBxB2n5cXwHnJUrMGVp1AIID47uP34
+# Consumer key: lGMBxB2n5cXwHnJUrMGVp1AIID47uP34
 
 # E.g. =====
-url <- "https://api.sandbox.amadeus.com/v1.2/cars/search-airport?apikey=lGMBxB2n5cXwHnJUrMGVp1AIID47uP34&location=DIA&pick_up=2018-12-07&drop_off=2018-12-08"
-
-httr::GET(url)
-
-# E.g. expanded =====
 
 base <- "https://api.sandbox.amadeus.com/v1.2/cars/search-airport"
 key <- "lGMBxB2n5cXwHnJUrMGVp1AIID47uP34"
@@ -21,7 +16,7 @@ pu <- as.character(today())
 do <- as.character(today() + 1)
 loc <- "SFO"
 
-req <- GET(base, query = list(
+resp <- GET(base, query = list(
   apikey = key, 
   location = loc, 
   pick_up = pu, 
@@ -29,119 +24,181 @@ req <- GET(base, query = list(
   ) %>%
   content()
 
-lengths(req$results)
+lengths(resp$results)
 
 dat <- data.frame("Provider" = NA, "Provider_Code" = NA,
                   "Airport" = NA, "Car_Code" = NA, 
                   "Rate_Type" = NA, "Price" = NA)
 
 # Company
-dat[1,c("Provider", "Provider_Code")] <- req[["results"]][[1]][["provider"]]
+dat[1,c("Provider", "Provider_Code")] <- resp[["results"]][[1]][["provider"]]
 
 # Airport
-dat[1, "Airport"] <- req[["results"]][[1]][["airport"]]
+dat[1, "Airport"] <- resp[["results"]][[1]][["airport"]]
 
 # Vehicle code
 dat[1, "Car_Code"] <- 
-  req[["results"]][[1]][["cars"]][[1]][["vehicle_info"]][["acriss_code"]]
+  resp[["results"]][[1]][["cars"]][[1]][["vehicle_info"]][["acriss_code"]]
 
 # Rate type; e.g. daily
 dat[1, "Rate_Type"] <- 
-  req[["results"]][[1]][["cars"]][[1]][["rates"]][[1]][["type"]]
+  resp[["results"]][[1]][["cars"]][[1]][["rates"]][[1]][["type"]]
 
 # Price
 dat[1, "Price"] <- 
-  req[["results"]][[1]][["cars"]][[1]][["rates"]][[1]][["price"]][["amount"]]
-
-# Dimension confusion ====
-req$results[[1]]$cars[[1]]$rates[[1]]$price$amount
-
-# req$results[[.]]$cars[[.]]$rates[[.]]$price$amount
-
-length(req$results) # [1] 6
-lengths(req$results) # [1] 6 6 6 6 6 6
-
-lengths(req$results[[1]])
-# provider branch_id  location   airport   address      cars 
-#        2         1         2         1         5         6 
-
-lengths(req$results[[2]])
-# provider branch_id  location   airport   address      cars 
-#        2         1         2         1         4         7 
-
-length(req$results[[1]]$cars) # [1] 6
-length(req$results[[2]]$cars) # [1] 7
-
-lengths(req$results[[1]]$cars) # [1] 3 4 4 4 4 4
-lengths(req$results[[2]]$cars) # [1] 4 4 4 4 4 4 4
-
-
-
+  resp[["results"]][[1]][["cars"]][[1]][["rates"]][[1]][["price"]][["amount"]]
 
 # Automate extraction =====
-
-GET_amadeus <- function(loc = "SFO"){
+collect_amadeus <- function(loc = "SFO"){
   
   base <- "https://api.sandbox.amadeus.com/v1.2/cars/search-airport"
   key <- "lGMBxB2n5cXwHnJUrMGVp1AIID47uP34"
   pu <- as.character(today())
   do <- as.character(today() + 1)
   
-  request <- GET(base, query = list(
+  resp <- GET(base, query = list(
     apikey = key, 
     location = loc, 
     pick_up = pu, 
     drop_off = do)
     ) %>%
     content()
+
+  for(i in 1:length(resp[["results"]])){ 
   
-  return(request)
-}
-
-req <- GET_amadeus()
-
-
-# Add date
-# get rid of NA row
-
-for(i in 1:length(req[["results"]])){ # **COMPANIES**
-  
+  # ****COMPANIES****
   if(i == 1){
     dat <- data.frame("Provider" = NA, "Provider_Code" = NA,
+                      "Latitude" = NA, "Longitude" = NA,
                       "Airport" = NA, "Car_Code" = NA, 
                       "Rate_Type" = NA, "Price" = NA)
   }
 
-  for(j in 1:length(req[["results"]][[i]][["cars"]])){ # **CARS**
+  # ****CARS****
+  for(j in 1:length(resp[["results"]][[i]][["cars"]])){ 
     
-    dat_ij <- data.frame("Provider" = NA, "Provider_Code" = NA,
-                         "Airport" = NA, "Car_Code" = NA, 
-                         "Rate_Type" = NA, "Price" = NA)
+    if(j == 1){
+      dat_j <- data.frame("Provider" = NA, "Provider_Code" = NA,
+                          "Airport" = NA, "Car_Code" = NA, 
+                          "Rate_Type" = NA, "Price" = NA)
+    }
     
-    # Company
-    dat_ij[1,c("Provider_Code", "Provider")] <- req[["results"]][[i]][["provider"]]
+    # Company**
+    dat_j[j,c("Provider_Code", "Provider")] <- resp[["results"]][[i]][["provider"]]
     
-    # Airport
-    dat_ij[1, "Airport"] <- req[["results"]][[i]][["airport"]]
+    dat_j[j, "Latitude"] <- resp[["results"]][[i]][["location"]][["latitude"]]
     
-    # Vehicle code
-    dat_ij[1, "Car_Code"] <- 
-      req[["results"]][[i]][["cars"]][[j]][["vehicle_info"]][["acriss_code"]]
+    dat_j[j, "Longitude"] <- resp[["results"]][[i]][["location"]][["longitude"]]
+
+    # Airport**
+    dat_j[j, "Airport"] <- resp[["results"]][[i]][["airport"]]
     
-    # Rate type; e.g. daily
-    dat_ij[1, "Rate_Type"] <- 
-      req[["results"]][[i]][["cars"]][[j]][["rates"]][[1]][["type"]]
+    # Vehicle code** (acriss code)
+    dat_j[j, "Car_Code"] <- 
+      resp[["results"]][[i]][["cars"]][[j]][["vehicle_info"]][["acriss_code"]]
     
-    # Price
-    dat_ij[1, "Price"] <- 
-      req[["results"]][[i]][["cars"]][[j]][["rates"]][[1]][["price"]][["amount"]]
+    # Rate type; e.g. daily**
+    dat_j[j, "Rate_Type"] <- 
+      resp[["results"]][[i]][["cars"]][[j]][["rates"]][[1]][["type"]]
     
-    dat <- rbind.data.frame(dat, dat_ij)
-      
+    # Price**
+    dat_j[j, "Price"] <- 
+      resp[["results"]][[i]][["cars"]][[j]][["rates"]][[1]][["price"]][["amount"]]
   }
-  if(i == length(req[["results"]])){rm(i, j, dat_ij)}
-}
+  
+  dat <- rbind.data.frame(dat, dat_j)
 
+  if(i == length(resp[["results"]])){
+    rm(i, j, dat_j)
+    dat <- dat %>% 
+      drop_na() %>%
+      mutate(date = today())
+  }
+  
+  }
+  return(dat)
+} # one airport
 
+amadeus_car_rental_byIATA <- function(){
+  
+  for(i in 1:46){
+    
+    if(i == 1){
+      IATA <- c("ATL", "LAX", "ORD", "DFW", "JFK", "DEN", "SFO", "LAS", "SEA",
+                "MIA", "CLT", "PHX", "MCO", "IAH", "EWR", "MSP", "BOS", "DTW",
+                "PHL", "LGA", "FLL", "BWI", "DCA", "SLC", "MDW", "IAD", "SAN",
+                "HNL", "TPA", "PDX", "DAL", "STL", "BNA", "HOU", "AUS", "OAK",
+                "MSY", "RDU", "MCI", "SJC", "SNA", "SMF", "SAT", "RSW", "IND",
+                "CLE")
+      dat <- data.frame("Provider" = NA, "Provider_Code" = NA,
+                        "Latitude" = NA, "Longitude" = NA,
+                        "Airport" = NA, "Car_Code" = NA, 
+                        "Rate_Type" = NA, "Price" = NA,
+                        "date" = NA)
+    }
+    
+    if(i %% 5 == 0){
+      print(i)
+      print(dim(dat))
+    }
+    print(IATA[i])
+    
+    try({
+      dat_IATA <- collect_amadeus(loc = IATA[i])
+      dat <- rbind.data.frame(dat, dat_IATA)
+    }, silent = TRUE)
+  }
+  dat <- dat %>%
+    drop_na()
+  return(dat)
+} # 46 airports
 
+# the four steps ======
 
+# (1) load
+car_rental_dat <- data.table::fread("car_rental_dat.csv") %>%
+  mutate("date" = lubridate::ymd(date))
+
+# (2) collect
+
+dat <- amadeus_car_rental_byIATA()
+
+# (3) combine
+car_rental_dat <- rbind.data.frame(car_rental_dat, dat)
+
+# (4) re-save
+data.table::fwrite(car_rental_dat, "car_rental_dat.csv")
+
+# Plot =====
+# car_rental_dat_by_IATA <- dat
+# data.table::fwrite(car_rental_dat_by_IATA, "car_rental_dat_by_IATA.csv")
+
+# Maps
+
+# some standard map packages.
+# install.packages(c("maps", "mapdata"))
+# devtools::install_github("dkahle/ggmap")
+
+library(ggplot2)
+library(ggmap)
+library(maps)
+library(mapdata)
+
+usa <- map_data("usa")
+dim(usa); head(usa)
+
+plot_dat <- car_rental_dat_by_IATA %>%
+  filter(Longitude > -130, Price < 300)
+
+ggplot() +   
+  geom_point(data = plot_dat, 
+             aes(x = Longitude, y = Latitude, 
+                 color=Price),
+             # position = position_jitter(w = 2, h = 2),
+             alpha = 0.7) +
+  scale_colour_gradientn(colours=rainbow(4)) +
+  geom_polygon(data = usa, 
+               aes(x=long, y = lat, group = group), 
+               fill = NA, color = "black")
+
+summary(plot_dat$Price)
