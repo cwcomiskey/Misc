@@ -1,0 +1,62 @@
+---
+title: 'FastScore: a Review for the useR'
+output: html_document
+---
+
+What is FastScore? An analytic deployment engine produced by Open Data Group (ODG), a start up software company based in Chicago. What is an "analytic deployment engine?"" Well, it's complicated. It turns out "it's complicated" is the answer to a lot of questions, if you're a garden-variety R user, when you're getting started with FastScore. But we'll get there.
+
+## Getting Started with FastScore
+
+Where should you start? The ODG [Getting Started](https://opendatagroup.github.io/Getting%20Started/Getting%20Started%20with%20FastScore/) page, naturally. It's well written, clear, and friendly; these are nice folks. But. What is DockerHub? For that matter, what is Docker? What is Ubuntu Linux? Where do I run this code? 
+
+```{r eval = FALSE}
+$ sudo apt-get install docker.io
+```
+
+What's a virtual machine? VirtualBox? Ports and IP addresses? Don't worry, none of this is too hard to learn; but you will need to learn it. Queue up Wikipedia, or bribe your favorite programmer friend with a case of beer to come help you. But again, don't worry, it will be worth it. Why? Well, it's complicated. But, here's my shot at a FastScore car ad... 
+
+**FastScore**: it's language agnostic, cloud ready, scalable, and it deploys models uniformly enterprise-wide---it's an organization's dream (Garrett and I worked on this car ad language together.)
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Up and running... and out of breath?
+
+You downloaded FastScore, Docker, Docker Compose, the FastScore CLI, maybe figured out how to use the FastScore dashboard, used `pip` and `sudo` commands on the way to doubling the amount of time you have spent at the command line in your life, have some idea of what a container is. You became acquainted with lots of FastScore lingo: engines, models, streams, schemas, sensors, and assets; and you may have even discovered the FastScore [glossary](https://opendatagroup.github.io/Glossary/) in the process.
+
+If you get FastScore up and running, and (more importantly) deploy a model--you're either a programmer-useR extraordinaire; or one step closer to being a programmer. And therein lies the first issue: why does a FastScore useR have to go through all that trouble? Well, it's complicated. 
+
+FastScore isn't necessarily designed to make life easy for the R-user data scientist, but rather make life profitable for the enterprise; see car ad above. On the other hand, R-using data scientists/analysts/researchers play key roles on many teams at many organizations, so Open Data Group is on it. 
+
+## ObseRvations
+
+#### Startup cost
+
+The FastScore startup cost is too time-expensive. The jargon, disparate downloads, programming tangents, and FastScore terminology is all too much for a useR to digest at the first ODG meal. 
+
+#### The interface
+
+Operating FastScore from the command line will alienate the useR masses. The dashboard is more user friendly, even a bit remniscient of RStudio. Wouldn't it be great if you could operate FastScore *from* RStudio?! You know, like [STAN](http://mc-stan.org/users/interfaces/rstan), or even [GitHub](http://happygitwithr.com/).
+
+#### Stremas and scheams
+
+Stream and schemas--which is which? You'll find yourself asking this over and over. That, and "Why do I need both?" Well, it's complicated. Also, what is a JSON file? And what is AVRO schema? These terms all seem pulled from a science fiction movie titled Planet Python. You will justifiably wonder why you need to learn all these formats to deploy a model.
+
+#### It ran! It ran?
+
+When you finally get FastScore running, and a model deployed, you won't see fireworks. In fact, you won't see anything at all; unless you know know where to look. Then, it will be awesome, right--and totally clear what just happened!? Well, not exactly. Most of what is truly groundbreaking about FastScore occurs beneath the hood, behind the scenes; and one of the challenges is making this more clear. For example, you'd be impressed if FastScore could run your R code with more data than could fit in your R environment right? Well it can!
+
+#### Documenation
+
+Programmers from Planet Python wrote the documenation too. While seemingly thorough, it's difficult to get through, often even find what you're looking for, if you're not a Plython. The home [documentation page](https://opendatagroup.github.io/) has many helpful links, if only I knew what an API and SDK were.
+
+#### The big picture
+
+How does it all fit together? 
+
+## **fastscoRe**
+
+All of these obstacles are suRmountable. ODG should simply hire the God of R   [Hadley Wickham](http://hadley.nz/)---the author, professor, RStudio Chief Scientist, R package machine, and Kiwi. Unfortunately, he's not currently looking for work; and neither is his like-minded, talented, R Jedi sisteR Charlotte Wickham. However, you'Re in luck! her first PhD student works for ODG! Talented up-and-comer Chris Comiskey, data scientist and budding developer, drank the R Kool-Aid from the Wickham royal family chalet, and studied at the feet of Jedi Chalotte Wickham.
+
+The Wickham genius and Jedi power? Make anything, and seemingly everything, accessible to the R masses through RStudio, R packages, and R vignettes. ODG and Chris Comiskey plan to do the same with FastScore.
