@@ -5,15 +5,17 @@ output: html_document
 
 What is FastScore? An analytic deployment engine produced by Open Data Group (ODG), a start up software company based in Chicago. What is an "analytic deployment engine?"" Well, it's complicated. It turns out "it's complicated" is the answer to a lot of questions, if you're a garden-variety R user, when you're getting started with FastScore. But we'll get there.
 
-## Getting Started with FastScore
+## Getting Started
 
-Where should you start? The ODG [Getting Started](https://opendatagroup.github.io/Getting%20Started/Getting%20Started%20with%20FastScore/) page, naturally. It's well written, clear, and friendly; these are nice folks. But. What is DockerHub? For that matter, what is Docker? What is Ubuntu Linux? Where do I run this code? 
+Where should you start? The ODG [Getting Started](https://opendatagroup.github.io/Getting%20Started/Getting%20Started%20with%20FastScore/) page, naturally. It's well written, clear, and friendly; these are nice folks. But. What is DockerHub? What is Docker? What is Ubuntu Linux? And where do I run this code? 
 
 ```{r eval = FALSE}
 $ sudo apt-get install docker.io
 ```
 
-What's a virtual machine? VirtualBox? Ports and IP addresses? Don't worry, none of this is too hard to learn; but you will need to learn it. Queue up Wikipedia, or bribe your favorite programmer friend with a case of beer to come help you. But again, don't worry, it will be worth it. Why? Well, it's complicated. But, here's my shot at a FastScore car ad... 
+What's a virtual machine? VirtualBox? Ports and IP addresses? 
+
+Don't worry, and don't run off; none of this is too hard to learn, but you will need to learn it. Queue up Wikipedia, or bribe your favorite programmer friend with a case of beer to come help you. Buckle up, stay the course---you'll be glad you did (and so will your boss). Why? Well, it's complicated. But, here's my shot at a FastScore car ad... 
 
 **FastScore**: it's language agnostic, cloud ready, scalable, and it deploys models uniformly enterprise-wide---it's an organization's dream (Garrett and I worked on this car ad language together.)
 
@@ -53,10 +55,77 @@ Programmers from Planet Python wrote the documenation too. While seemingly thoro
 
 #### The big picture
 
-How does it all fit together? 
+How does it all fit together? Presumably this answer exists, but it's not readiy apparent. Part of the Wickham genius (see below) is the ability to present challenging concepts in increasingly complex representations, usually including graphics. A good, but too infrequent example of this in the ODG documentation is the FastScore [architecture](https://opendatagroup.github.io/Getting%20Started/FastScore%20IA/) image.
 
-## **fastscoRe**
+## Cracking the Code: **fastscoRe** 
 
-All of these obstacles are suRmountable. ODG should simply hire the God of R   [Hadley Wickham](http://hadley.nz/)---the author, professor, RStudio Chief Scientist, R package machine, and Kiwi. Unfortunately, he's not currently looking for work; and neither is his like-minded, talented, R Jedi sisteR Charlotte Wickham. However, you'Re in luck! her first PhD student works for ODG! Talented up-and-comer Chris Comiskey, data scientist and budding developer, drank the R Kool-Aid from the Wickham royal family chalet, and studied at the feet of Jedi Chalotte Wickham.
+The good news is all of these obstacles are suRmountable; bring in [Hadley Wickham](http://hadley.nz/) [^1]. Alas, Hadly's busy; and so is his R Jedi sisteR [Charlotte](http://www.cwick.co.nz/).[^2] However, we'Re all in luck: Charlotte's first PhD student works for ODG! Talented up-and-comer Chris Comiskey, data scientist and budding developer, drank the R Kool-Aid from the Wickham royal family chalet, and apprenticed at the feet of Jedi Chalotte Wickham.
 
-The Wickham genius and Jedi power? Make anything, and seemingly everything, accessible to the R masses through RStudio, R packages, and R vignettes. ODG and Chris Comiskey plan to do the same with FastScore.
+The Wickham genius and Jedi power? Make anything, and seemingly everything, accessible to the R masses through RStudio, R packages, and R vignettes. ODG and Chris Comiskey plan to do the same with FastScore. The grand vision? **fastscoRe** the package. Give us a package and some vignettes, and from the comfort of RStudio we useRs can figure anything out.
+
+#### FastScore Startup -- now on sale!
+
+The initial FastScore download for R users will be two parts: a FastScore bundle[^3], and **fastscoRe** the package. As R packages do, **fastscoRe** will come with an introductory vignette that walks users through a couple of "Hello World" examples lickety split, with package-included data sets. Want more details about any aspects of what you just saw? The key concepts in the introductory vignette will hyperlink to additional R vignettes, and soon---with illustrations and a slow reveal of new terms---you'll understand FastScore without even realizing it. 
+
+#### The inteRface
+
+Dyed in the wool R users won't use FastScore willingly, for very long, from the command line. The dashboard may suffice, and time would tell; but it doesn't have to. ODG has every confidence it can make FastScore fully accessible from the sweet comforts of RStudio.[^4] The contents of an engine could easily be presented as an R object, much as the dashboard presents the contents of an engine. Schemas, streams, and models could be moved around, linked together, or supplied as function arguments. 
+
+```{r, eval = FALSE}
+deployment1 <- fastscoRe::deploy(engine = "engine1", model = "score.R", in_data = "/ODG/big_data.csv", schemas = c(input, output), streams = c(in_stream, out_stream))
+
+deployment2 <- fastscoRe::deploy(config = deployment1, new_data = "/ODG/huge_data.csv")
+```
+
+Bayesians may notice this structure resembles **rstan**, the r interface to [STAN](http://mc-stan.org/users/interfaces/rstan). The comparison is apt, and favorable. The Bayesian computing software was written *by* R users, namely statisticians at the University of Columbia, and widely adopted by useR nation. This should serve as something along the lines of a proof of concept to developers and decision-makers at ODG; perhaps even a template for success convincing R users to embrace.
+
+#### Schemas and Streams? Just familiar R objects and function arguments
+When I learned FastScore, I had not heard of AVRO schema or JSON documents. However, this need not be an obstacle. For example, consider the following AVRO schema, from the ODG [schema reference](https://opendatagroup.github.io/Product%20Manuals/Schema%20Reference/) page.
+
+```{r, eval = FALSE}
+{
+  "type":"record",
+  "name":"input",
+  "fields": [
+    {"name":"JohnDoe", "type":"string"},
+    {"name":"x", "type":"double"},
+    {"name":"y", "type":"double"}
+    ]
+}
+```
+
+Much to my own chagrin, I confess my eyes glossed over the first time I heard the words "AVRO schema" and saw one. However, the same content is easily captured in a two element R list---and no gloss.
+
+```{r, eval = FALSE}
+> input
+$type
+[1] "record"
+
+$fields
+     name   type
+1 JohnDoe string
+2       x double
+3       y double
+```
+
+The same can be easily accomplished for stream descriptors. It's worth noting that it wouldn't be that difficult, especially for the Wizards of ODG, for this list to be converted to the FastScore digestible AVRO schema behind the curtain; and the useR never suspects a thing.
+
+#### It ran! There it is!
+
+Upon deploying a model in FastScore the useR should she a new object in the R environment.
+
+```{r}
+deployment1 <- fastscoRe::deploy(engine = "engine1", model = "score.R", in_data = "/ODG/big_data.csv", schemas = c(input, output), streams = c(in_stream, out_stream))
+```
+
+## Summary
+
+Programmers created FastScore, and it handles like they wrote it for other programmers. The challenge is that useRs aren't always programmers. Oftentimes they're statisticians that use R to carry out necessary data wrangling, implement statistical techniques and analysis, and create accompanying graphics. At this stage much of FastScore is lost in translation. However, give them time. They're on it; with Hadley Wickham's R-newphew Chris Comiskey steering the ship.
+
+[^1]:Undisputed God of R... RStudio Chief Scientist, top R package [creater](https://www.rdocumentation.org/collaborators/name/Hadley%20Wickham)/[maintainer](https://www.datacamp.com/community/blog/top-5-r-package-maintainers) on the globe (~125 packages, ~850K direct downloads), [author](https://smile.amazon.com/Hadley-Wickham/e/B002BOA9GI/ref=sr_tc_2_0?qid=1536254513&sr=8-2-ent), and professor.
+
+[^2]:Both attended the University of Auckland, the birthplace of R.
+
+[^3]:Note to ODG folks: if possible/necessary, this might be a baby version of FastScore. At the demo phase of FastScore usage, it doesn't need to actually *be* FastScore; just look and act like FastScore. In fact, this might be advantageous b/c R users could download a baby/test version in a pseudo **fastscoRe** package from https://opendatagroup.github.io/ or GitHub.
+
+[^4]:This could be in combination with an R SDK built with useR-programmers in mind.

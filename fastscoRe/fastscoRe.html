@@ -121,11 +121,12 @@ $(document).ready(function () {
 
 
 <p>What is FastScore? An analytic deployment engine produced by Open Data Group (ODG), a start up software company based in Chicago. What is an “analytic deployment engine?”&quot; Well, it’s complicated. It turns out “it’s complicated” is the answer to a lot of questions, if you’re a garden-variety R user, when you’re getting started with FastScore. But we’ll get there.</p>
-<div id="getting-started-with-fastscore" class="section level2">
-<h2>Getting Started with FastScore</h2>
-<p>Where should you start? The ODG <a href="https://opendatagroup.github.io/Getting%20Started/Getting%20Started%20with%20FastScore/">Getting Started</a> page, naturally. It’s well written, clear, and friendly; these are nice folks. But. What is DockerHub? For that matter, what is Docker? What is Ubuntu Linux? Where do I run this code?</p>
+<div id="getting-started" class="section level2">
+<h2>Getting Started</h2>
+<p>Where should you start? The ODG <a href="https://opendatagroup.github.io/Getting%20Started/Getting%20Started%20with%20FastScore/">Getting Started</a> page, naturally. It’s well written, clear, and friendly; these are nice folks. But. What is DockerHub? What is Docker? What is Ubuntu Linux? And where do I run this code?</p>
 <pre class="r"><code>$ sudo apt-get install docker.io</code></pre>
-<p>What’s a virtual machine? VirtualBox? Ports and IP addresses? Don’t worry, none of this is too hard to learn; but you will need to learn it. Queue up Wikipedia, or bribe your favorite programmer friend with a case of beer to come help you. But again, don’t worry, it will be worth it. Why? Well, it’s complicated. But, here’s my shot at a FastScore car ad…</p>
+<p>What’s a virtual machine? VirtualBox? Ports and IP addresses?</p>
+<p>Don’t worry, and don’t run off; none of this is too hard to learn, but you will need to learn it. Queue up Wikipedia, or bribe your favorite programmer friend with a case of beer to come help you. Buckle up, stay the course—you’ll be glad you did (and so will your boss). Why? Well, it’s complicated. But, here’s my shot at a FastScore car ad…</p>
 <p><strong>FastScore</strong>: it’s language agnostic, cloud ready, scalable, and it deploys models uniformly enterprise-wide—it’s an organization’s dream (Garrett and I worked on this car ad language together.)</p>
 </div>
 <div id="up-and-running-and-out-of-breath" class="section level2">
@@ -158,13 +159,61 @@ $(document).ready(function () {
 </div>
 <div id="the-big-picture" class="section level4">
 <h4>The big picture</h4>
-<p>How does it all fit together?</p>
+<p>How does it all fit together? Presumably this answer exists, but it’s not readiy apparent. Part of the Wickham genius (see below) is the ability to present challenging concepts in increasingly complex representations, usually including graphics. A good, but too infrequent example of this in the ODG documentation is the FastScore <a href="https://opendatagroup.github.io/Getting%20Started/FastScore%20IA/">architecture</a> image.</p>
 </div>
 </div>
-<div id="fastscore" class="section level2">
-<h2><strong>fastscoRe</strong></h2>
-<p>All of these obstacles are suRmountable. ODG should simply hire the God of R <a href="http://hadley.nz/">Hadley Wickham</a>—the author, professor, RStudio Chief Scientist, R package machine, and Kiwi. Unfortunately, he’s not currently looking for work; and neither is his like-minded, talented, R Jedi sisteR Charlotte Wickham. However, you’Re in luck! her first PhD student works for ODG! Talented up-and-comer Chris Comiskey, data scientist and budding developer, drank the R Kool-Aid from the Wickham royal family chalet, and studied at the feet of Jedi Chalotte Wickham.</p>
-<p>The Wickham genius and Jedi power? Make anything, and seemingly everything, accessible to the R masses through RStudio, R packages, and R vignettes. ODG and Chris Comiskey plan to do the same with FastScore.</p>
+<div id="cracking-the-code-fastscore" class="section level2">
+<h2>Cracking the Code: <strong>fastscoRe</strong></h2>
+<p>The good news is all of these obstacles are suRmountable; bring in <a href="http://hadley.nz/">Hadley Wickham</a> <a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a>. Alas, Hadly’s busy; and so is his R Jedi sisteR <a href="http://www.cwick.co.nz/">Charlotte</a>.<a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a> However, we’Re all in luck: Charlotte’s first PhD student works for ODG! Talented up-and-comer Chris Comiskey, data scientist and budding developer, drank the R Kool-Aid from the Wickham royal family chalet, and apprenticed at the feet of Jedi Chalotte Wickham.</p>
+<p>The Wickham genius and Jedi power? Make anything, and seemingly everything, accessible to the R masses through RStudio, R packages, and R vignettes. ODG and Chris Comiskey plan to do the same with FastScore. The grand vision? <strong>fastscoRe</strong> the package. Give us a package and some vignettes, and from the comfort of RStudio we useRs can figure anything out.</p>
+<div id="fastscore-startup-now-on-sale" class="section level4">
+<h4>FastScore Startup – now on sale!</h4>
+<p>The initial FastScore download for R users will be two parts: a FastScore bundle<a href="#fn3" class="footnoteRef" id="fnref3"><sup>3</sup></a>, and <strong>fastscoRe</strong> the package. As R packages do, <strong>fastscoRe</strong> will come with an introductory vignette that walks users through a couple of “Hello World” examples lickety split, with package-included data sets. Want more details about any aspects of what you just saw? The key concepts in the introductory vignette will hyperlink to additional R vignettes, and soon—with illustrations and a slow reveal of new terms—you’ll understand FastScore without even realizing it.</p>
+</div>
+<div id="the-interface-1" class="section level4">
+<h4>The inteRface</h4>
+<p>Dyed in the wool R users won’t use FastScore willingly, for very long, from the command line. The dashboard may suffice, and time would tell; but it doesn’t have to. ODG has every confidence it can make FastScore fully accessible from the sweet comforts of RStudio.<a href="#fn4" class="footnoteRef" id="fnref4"><sup>4</sup></a> The contents of an engine could easily be presented as an R object, much as the dashboard presents the contents of an engine. Schemas, streams, and models could be moved around, linked together, or supplied as function arguments.</p>
+<pre class="r"><code>deployment1 &lt;- fastscoRe::deploy(engine = &quot;engine1&quot;, model = &quot;score.R&quot;, data = &quot;/ODG/big_data.csv&quot;, schemas = c(input, output), streams = c(in_stream, out_stream))
+
+deployment2 &lt;- fastscoRe::deploy(config = deployment1, new_data = &quot;/ODG/huge_data.csv&quot;)</code></pre>
+<p>Bayesians may notice this structure resembles <strong>rstan</strong>, the r interface to <a href="http://mc-stan.org/users/interfaces/rstan">STAN</a>. The comparison is apt, and favorable. The Bayesian computing software was written <em>by</em> R users, namely statisticians at the University of Columbia, and widely adopted by useR nation. This should serve as something along the lines of a proof of concept to developers and decision-makers at ODG; perhaps even a template for success convincing R users to embrace.</p>
+</div>
+<div id="schemas-and-streams-just-familiar-r-objects-and-function-arguments" class="section level4">
+<h4>Schemas and Streams? Just familiar R objects and function arguments</h4>
+<p>When I learned FastScore, I had not heard of AVRO schema or JSON documents. However, this need not be an obstacle. For example, consider the following AVRO schema, from the ODG <a href="https://opendatagroup.github.io/Product%20Manuals/Schema%20Reference/">schema reference</a> page.</p>
+<pre class="r"><code>{
+  &quot;type&quot;:&quot;record&quot;,
+  &quot;name&quot;:&quot;input&quot;,
+  &quot;fields&quot;: [
+    {&quot;name&quot;:&quot;JohnDoe&quot;, &quot;type&quot;:&quot;string&quot;},
+    {&quot;name&quot;:&quot;x&quot;, &quot;type&quot;:&quot;double&quot;},
+    {&quot;name&quot;:&quot;y&quot;, &quot;type&quot;:&quot;double&quot;}
+    ]
+}</code></pre>
+<p>Much to my own chagrin, I confess my eyes glossed the first time I heard the words “AVRO schema” and saw one like the above. However, the same content is easily captured in a two element R list, without the gloss.</p>
+<pre class="r"><code>&gt; input
+$type
+[1] &quot;record&quot;
+
+$fields
+     name   type
+1 JohnDoe string
+2       x double
+3       y double</code></pre>
+</div>
+</div>
+<div id="summary" class="section level2">
+<h2>Summary</h2>
+<p>Programmers created FastScore, and it handles like they wrote it for other programmers. The challenge is that useRs aren’t always programmers. Oftentimes they’re statisticians that use R to carry out necessary data wrangling, implement statistical techniques and analysis, and create accompanying graphics. At this stage much of FastScore is lost in translation. However, give them time. They’re on it; with Hadley Wickham’s R-newphew Chris Comiskey steering the ship.</p>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Undisputed God of R… RStudio Chief Scientist, top R package <a href="https://www.rdocumentation.org/collaborators/name/Hadley%20Wickham">creater</a>/<a href="https://www.datacamp.com/community/blog/top-5-r-package-maintainers">maintainer</a> on the globe (~125 packages, ~850K direct downloads), <a href="https://smile.amazon.com/Hadley-Wickham/e/B002BOA9GI/ref=sr_tc_2_0?qid=1536254513&amp;sr=8-2-ent">author</a>, and professor.<a href="#fnref1">↩</a></p></li>
+<li id="fn2"><p>Both attended the University of Auckland, the birthplace of R.<a href="#fnref2">↩</a></p></li>
+<li id="fn3"><p>Note to ODG folks: if possible/necessary, this might be a baby version of FastScore. At the demo phase of FastScore usage, it doesn’t need to actually <em>be</em> FastScore; just look and act like FastScore. In fact, this might be advantageous b/c R users could download a baby/test version in a pseudo <strong>fastscoRe</strong> package from <a href="https://opendatagroup.github.io/" class="uri">https://opendatagroup.github.io/</a> or GitHub.<a href="#fnref3">↩</a></p></li>
+<li id="fn4"><p>This could be in combination with an R SDK built with useR-programmers in mind.<a href="#fnref4">↩</a></p></li>
+</ol>
 </div>
 
 
