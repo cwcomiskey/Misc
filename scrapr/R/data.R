@@ -13,4 +13,7 @@
 #' 989 x 8: Wal-API, query by ID results
 "datr"
 
+#' origin-destination combos, w/ long-lat
+"orig_dest"
+
 
