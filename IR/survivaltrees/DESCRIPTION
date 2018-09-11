@@ -1,0 +1,21 @@
+Package: survivaltrees
+Type: Package
+Title: Decision Trees for Survival Analysis
+Version: 0.1.0
+Author: Chris Comiskey, Open Data Group
+Maintainer: Chris Comiskey <chris.comiskey@opendatagroup.com>
+Description: Create decision trees for survival analysis. Specifically,
+    survival trees for left-truncated, right censored data.
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+Imports:
+    dplyr,
+    lubridate,
+    LTRCtrees,
+    survival,
+    rpart,
+    rpart.plot,
+    partykit,
+    tidyr
+RoxygenNote: 6.1.0
