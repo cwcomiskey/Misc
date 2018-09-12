@@ -4,7 +4,7 @@
 \name{thermoking}
 \alias{thermoking}
 \title{Thermo King data, Anderson-Gill style}
-\format{A data frame with 50310 rows and 87 variables; notable variables:
+\format{A data frame with 42981 rows and 87 variables; notable variables:
 \describe{
   \item{months_in_field}{number of months in the field for the unit.}
   \item{serial}{unit identifier.}
