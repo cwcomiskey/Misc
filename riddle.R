@@ -1,19 +1,27 @@
 library(dplyr)
 
-X <- data.frame(Player = c("A", "B", "C", "D"), choice = runif(4)) %>%
-  arrange(choice)
+container <- data.frame(a = NA, b = NA, c = NA, d = NA, 
+                PA = NA, PB = NA, PC = NA, PD = NA)
 
-# Prob function
-PX <- function(df){
-  df$p <- 0
-  df[1,"p"] <- (df[1,"choice"] - 0) + 0.5*(df[2, "choice"] - df[1,"choice"])
-  df[2,"p"] <- 0.5*(df[3, "choice"] - df[1, "choice"]) 
-  df[3,"p"] <- 0.5*(df[4, "choice"] - df[2, "choice"])
-  df[4,"p"] <- (1 - df[4, "choice"]) + 0.5*(df[4, "choice"] - df[3, "choice"])
-  return(df)
-} # P(X) column
+PW <- function(w, x, y, z){
+  if(w == x | w == y | w == z | x == y | x == z | y == z) {
+    stop("Ties aren't allowed")
+  }
+  others <- c(x, y, z)
+  i <- sort(others)
+  if(w < i[1]){
+    pwin <- (w - 0) + 0.5*(i[1] - w)
+  } else if(w < i[2]){
+    pwin <- 0.5*(i[2] - i[1])
+  } else if(w < i[3]){
+    pwin <- 0.5*(i[3] - i[2])
+  } else {
+    pwin <- (1 - w) + 0.5*(w - i[3])
+  }
+  return(pwin)
+  } # P(W = w wins|x, y, z)
 
-# D's choice function
+
 Optd <- function(a, b, c){
   X <- data.frame(Interval = c("1", "2", "3", "4"), Score = 0) 
   x <- sort(c(a, b, c))
@@ -22,16 +30,51 @@ Optd <- function(a, b, c){
   X["3", "Score"] <- 0.5*(x[3] - x[2])
   X["4", "Score"] <- 1 - x[3]
   winner <- filter(X, Score == max(Score))$Interval
-  if(length(winner) != 1) stop("Tie!")
-  if(winner == "4"){
-    d <- x[3] + .Machine$double.eps
-  } else if(winner == "3"){
-    d <- 0.5*(x[2] + x[3])
-  } else if(winner == "2"){
-    d <- 0.5*(x[1] + x[2])
-  } else{
-      d <- x[1] - .Machine$double.eps
+  
+  if(length(winner) == 1) stop("No winner, this is a problem.")
+  if(length(winner) == 1){
+    if(winner == "4"){
+      d <- x[3] + .Machine$double.eps
+    } else if(winner == "3"){
+      d <- 0.5*(x[2] + x[3])
+    } else if(winner == "2"){
+      d <- 0.5*(x[1] + x[2])
+    } else{
+        d <- x[1] - .Machine$double.eps
     }
+  }
+  if(length(winner) > 1){
+    l <- length(winner)
+    #
+    #  --- CONTINUE HERE ---
+    # 
+  }
   return(d)
-}
+} # optimal d given a, b, c
 
+l <- 100 # length
+I05 <- seq(0, 0.5, length = l) # [0, 0.5]
+I01 <- seq(0, 1, length = l)   # [0, 1]
+
+for(ai in I05){
+  
+  for(bj in I01){
+    if(bj == ai) next
+    
+    for(ck in I01){
+      if(ck == ai | ck == bj) next
+      
+      d_opt <- Optd(a = ai, b = bj, c = ck)
+      
+      PA <- PW(ai, bj, ck, d_opt)
+      PB <- PW(bj, ai, ck, d_opt)
+      PC <- PW(ck, ai, bj, d_opt)
+      PD <- PW(d_opt, ai, bj, ck)
+      
+      result_ijk <- data.frame(a = ai, b = bj, c = ck, d = d_opt,
+                               PA = PA, PB = PB, PC = PC, PD = PD)
+      container <- rbind.data.frame(container, result_ijk)
+
+    }
+  }
+}
