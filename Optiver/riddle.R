@@ -5,8 +5,9 @@ source("PW.R")
 container <- data.frame(a = NA, b = NA, c = NA, d = NA, 
                 PA = NA, PB = NA, PC = NA, PD = NA)
 
-I05 <- seq(0, 0.5, by = 0.01) # [0, ... , 0.5]
-I01 <- seq(0, 1, by = 0.015)   # [0, ... , 1]
+n = 10000
+I05 <- seq(0, 0.5, length = n) # [0, ... , 0.5]
+I01 <- seq(0, 1, length = n)   # [0, ... , 1]
 
 for(ai in I05){
   print(ai)
@@ -46,8 +47,6 @@ for(ai in I05){
     }
   }
 }
-
-test <- apply(X = container[,5:8], MARGIN = 1, FUN = sum)
 
 container2 <- container %>%
   group_by(a, b) %>%
