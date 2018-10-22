@@ -1,4 +1,4 @@
-# Optiver -- Data Scientist Application Materials
+# Optiver -- Riddle Algorithm Files
 
 * riddle.R	- full algorithm for optimal a in four player game
 
