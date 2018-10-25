@@ -1,0 +1,208 @@
+\documentclass{beamer}
+
+\mode<presentation>
+{
+  \usetheme{Boadilla}
+  \usecolortheme{whale}
+  \setbeamercovered{transparent}
+  \setbeamertemplate{footline}[frame number]{}
+  \setbeamertemplate{navigation symbols}{}
+}
+
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{times}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amsthm, amssymb, amsfonts}
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{natbib}
+\bibliographystyle{unsrtnat}
+\usepackage{float}
+\usepackage{bbm}
+\usepackage{mathrsfs}
+
+% ======== Alix notation =======
+\def\th{\theta}
+\def\eps{\epsilon}
+\def\beq{\begin{equation}}
+\def\eeq{\end{equation}}
+\def\bdm{\begin{displaymath}}
+\def\edm{\end{displaymath}}
+\def\vsd{\vspace{0.1in}}
+% ==============================
+
+\usepackage{listings}
+\usepackage{relsize}
+
+\makeatletter
+\def\verbatim{\scriptsize\@verbatim \frenchspacing\@vobeyspaces \@xverbatim}
+\makeatother
+
+
+\institute{} 
+\title{``Thinking, Fast and Slow''}
+\subtitle{Evolutionarily Old and New Modes of ``Thinking''}
+\author{Book: Daniel Kahneman \\ Colloquium: Chris Comiskey} 
+
+\date{\today} 
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Introduction}{Kahneman, Evolution, the Brain...}
+
+  \begin{itemize}
+  \addtolength{\itemsep}{0.5\baselineskip}
+  \item If you don't ``believe'' in evolution...
+  \item Kahneman: Behavioral Economics, behavioral psychology, decision making
+  \item Modular theory of mind
+    \begin{itemize}
+    \addtolength{\itemsep}{0.5\baselineskip}
+    \item {\it Kind of} like apps
+    \item Apps that interact, compete, interrelate, self-manage(?)
+    \item Not a physical partition of brain
+    \item e.g. small heat robot
+    \item Different parts of the brain evolved at different times, with new functions added on later, melding with existing ones...
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+% 
+\begin{frame}{Old and New, Fast and Slow}{System 1 and Stystem 2}
+\begin{itemize}
+\addtolength{\itemsep}{0.5\baselineskip}
+\item Evolutionarily old and new
+    \begin{itemize}
+    \addtolength{\itemsep}{0.5\baselineskip}
+    \item Old: amygdala (?) --- fast circuitry; closer to the stock exchange
+    \item New: prefrontal cortex --- reflection, abstract thinking, etc.
+    \end{itemize}
+\item Fast and Slow, e.g.
+    \begin{itemize}
+    \addtolength{\itemsep}{0.5\baselineskip}
+    \item Fast: ``I can't believe that f****r cut me off!! I'll club him!!''
+    \item Slow: ``Then again, maybe he really needed to get over; plus, I don't want to go to jail.''
+    \end{itemize}
+\item Fast and Slow, e.g.2
+    \begin{itemize}
+    \addtolength{\itemsep}{0.5\baselineskip}
+    \item Fast: Recognizing emotions in facial expressions
+    \item Slow: 17*34 = ?
+    \end{itemize}
+\item Not exactly the same thing---equating amygdala/prefrontal to fast/slow---but that's the idea behind the more complex underlying brain reality.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{What's the point?}{}
+\begin{itemize}
+\addtolength{\itemsep}{0.5\baselineskip}
+\item Cognitive biases.
+\item Systematic errors of thinking.
+\item We're irrational in systematic ways.
+\item Middle three sections of book:
+    \begin{itemize}
+    \addtolength{\itemsep}{0.5\baselineskip}
+    \item Heuristics and Biases
+    \item Overconfidence (personal favorite)
+    \item Choices
+    \end{itemize}
+\item Heuristic --- rule of thumb
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Heuristics and Biases}{Statistical Thinking}
+\begin{itemize}
+\item ``A study of new diagnoses of kidney cancer in the 3,141 counties of the United States reveals a remarkable pattern. The counties in which the incidence of kidney cancer is lowest are mostly rural, sparsely populated, and located in traditionally Republican states in the Midwest, the South, and the West. What do you make of this?''
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}{Heuristics and Biases}{Statistical Thinking}
+What about the counties with highest incidence of kidney cancer?
+\begin{itemize}
+\item ``...mostly rural, sparsely populated, and located in traditionally Republican states in the Midwest, the South, and the West.''
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Heuristics and Biases}{Statistical Thinking}
+What about the counties with highest incidence of kidney cancer?
+\begin{itemize}
+\item ``...mostly rural, sparsely populated, and located in traditionally Republican states in the Midwest, the South, and the West.''
+\item Associative, causal-relationship-seeking, story-telling System 1 goes crazy, but...
+\item Answer: small samples yield extreme results more frequently.
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Heuristics and Biases}{Availability, Substitution}
+\begin{itemize}
+\item The brain is lazy, and using System 1 and a heuristic is easier than calling on System 2.
+\item Substitution heuristic: if a question is too hard, answer an easier one!
+\item Subsitution heuristic, e.g. availability bias
+  \begin{itemize}
+  \item How likely is your plane to crash?
+  \item How likely is a school shooting at the local school?
+  \end{itemize}
+\item Media coverage makes crashes and shootings easy to recall; ease of recall replaces actual likelihood estimation (substitution), instantiating the ``availability bias'' 
+\item Which is more likely cause of death, and by what ratio? 
+  \begin{itemize}
+  \item Strokes or accidents?
+  \item Accidents or diabetes?
+  \item Disease or accident?
+  \end{itemize}
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Heuristics and Biases}{Availability, Substitution, Affect}
+\begin{itemize}
+\item The brain is lazy, and using System 1 and a heuristic is easier than calling on System 2.
+\item Substitution heuristic: if a question is too hard, answer an easier one!
+\item Subsitution heuristic, e.g. availability bias
+    \begin{itemize}
+    \item How likely is your plane to crash?
+    \item How likely is a school shooting at the local school?
+    \end{itemize}
+\item Media coverage makes crashes and shootings easy to recall; ease of recall replaces actual likelihood estimation (substitution), instantiating the ``availability bias'' 
+\item Which is more likely cause of death, and by what ratio? 
+    \begin{itemize}
+    \item Lightning or botulism? lightning:botulism = 52:1
+    \item Accidents or diabetes? diabetes:accident = 4:1
+    \item Disease or accident? disease:accident = 18:1
+    \end{itemize}
+\item Example of affect heuristic --- motional response as probability estimator.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Overconfidence}{}
+
+\end{frame}
+
+
+
+
+% \begin{frame}{The Black Swan, Nassim Taleb, Empirica Capital}{}
+% \begin{columns}
+% \column{0.5\textwidth}
+% \begin{itemize}
+% \item The Black Swan
+%   \begin{itemize}
+%   \item The concept
+%   \item The book
+%   \end{itemize}
+% \item Nassim Taleb
+% \item Empirica Capital
+% \end{itemize}
+% \column{0.5\textwidth}
+%     \begin{figure}[H]
+%   	\centering
+%   	\includegraphics[scale=.25]{Colloqium/BS.png}
+%   	\end{figure}
+% \end{columns}
+% \end{frame}
+
+
+
+\end{document}
