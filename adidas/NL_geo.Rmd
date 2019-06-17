@@ -1,0 +1,73 @@
+---
+title: "Geo Experiment"
+author: "Chris Comiskey"
+date: "6/17/2019"
+output: html_document
+---
+
+```{r, message=FALSE, echo = FALSE, warning=FALSE}
+library(readr)
+library(devtools)
+library(GeoexperimentsResearch)
+library(tidyr)
+library(dplyr)
+library(stringr)
+library(lubridate)
+library(ggplot2)
+
+nl_geo <- readr::read_csv(
+  "nl_geo.csv", col_types = cols(X1 = col_skip(), date = col_date(format = "%Y-%m-%d"))
+  )
+```
+
+
+```{r, echo = FALSE}
+geo_ts <- GeoTimeseries(nl_geo, metrics = c('Cost', 'Revenue'))
+
+phases <- ExperimentPeriods(c("2019-01-01", "2019-03-06", "2019-05-19"))
+
+geo_assign <- nl_geo %>%
+  select(geo, geo.group) %>%
+  distinct() %>%
+  GeoAssignment()
+
+geo_obj <- GeoExperimentData(geo.timeseries = geo_ts, 
+                             periods = phases, 
+                             geo.assignment = geo_assign)
+
+```
+
+## NL Revenue Results
+
+Time based regression yields these results: estimated revenue increase, confidence interval lower and upper bounds, standard error (estimated standard deviation), level of confidence interval.
+
+```{r, echo=FALSE, warning=FALSE}
+tbr_rev <- DoTBRAnalysis(geo_obj, 
+                         response = 'Revenue',
+                         model = 'tbr1',
+                         pretest.period = 0,
+                         intervention.period = 1,
+                         control.group = 1,
+                         treatment.group = 2)
+
+tbr_rev_summary = summary(tbr_rev, level = 0.95, interval.type = "two-sided")
+tbr_rev_summary[-c(2, 7:9)]
+```
+
+The esimated revenue increase due to the treatment is €49470, with 95% confidence interval (€18178, €80762).
+
+Time based regression results:
+
+```{r , warning = FALSE, echo = FALSE}
+plot(tbr_rev) 
+```
+
+* The top panel shows the *observed* treatment time series (red) and the estimated counterfactual. 
+* The middle panel shows the pointwise, daily difference between the observed and estimated counterfactual. 
+
+* The bottom panel shows the sum of these differences. 
+
+The shaded region around the counterfactual line, in each panel, depicts the counterfactual 95% confidence interval
+
+## NL iROAS Results
+
